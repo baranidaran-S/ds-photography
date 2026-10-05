@@ -90,22 +90,6 @@ export function Footer() {
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
       const q = gsap.utils.selector(el);
 
-      // The footer slides up from underneath the page as it comes into view
-      gsap.fromTo(
-        q(".ft-inner"),
-        { yPercent: -18 },
-        {
-          yPercent: 0,
-          ease: "none",
-          scrollTrigger: {
-            trigger: el,
-            start: "top bottom",
-            end: "bottom bottom",
-            scrub: true,
-          },
-        },
-      );
-
       // Logo and links rise in, the big line writes itself word by word between two rules that
       // draw outwards from it, then the columns and the bottom bar
       const split = SplitText.create(q(".ft-headline"), {
