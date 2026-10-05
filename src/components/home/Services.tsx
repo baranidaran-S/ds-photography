@@ -47,6 +47,8 @@ export function Services() {
       if (!el) return;
       const q = gsap.utils.selector(el);
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      // Touch screens skip the blur as a new photo pulls into focus: blur is heavy for phones to draw
+      const blurIn = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
       const viewfinder = q<HTMLElement>(".vf")[0];
       const slides = q<HTMLElement>(".vf-slide");
@@ -164,8 +166,10 @@ export function Services() {
           .to(flash, { opacity: 0, duration: 0.7, ease: "power2.out" }, "<-0.6")
           .fromTo(
             slides[next].querySelectorAll("img"),
-            { scale: 1.12, filter: "blur(10px)" },
-            { scale: 1, filter: "blur(0px)", duration: 1.2, ease: "power3.out" },
+            blurIn ? { scale: 1.12, filter: "blur(10px)" } : { scale: 1.12 },
+            blurIn
+              ? { scale: 1, filter: "blur(0px)", duration: 1.2, ease: "power3.out" }
+              : { scale: 1, duration: 1.2, ease: "power3.out" },
             "<",
           )
           .fromTo(

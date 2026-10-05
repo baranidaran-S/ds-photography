@@ -81,7 +81,11 @@ function FeatureCard({ film, index, onPlay }: CardProps) {
         className="absolute inset-0 bg-gradient-to-t from-night/85 via-night/25 to-night/10"
       />
       <PlayButton large />
-      <span className="absolute inset-x-0 bottom-0 p-5 sm:p-8 lg:p-10">
+      {/* the "screen opens" entrance: two dark bars slide apart from a thin line of light (hidden
+          until the animation sets them up, so the picture shows if animations are off) */}
+      <span aria-hidden className="fm-bar invisible absolute inset-x-0 top-0 z-10 h-1/2 bg-night" />
+      <span aria-hidden className="fm-bar invisible absolute inset-x-0 bottom-0 z-10 h-1/2 bg-night" />
+      <span className="fm-feature-text absolute inset-x-0 bottom-0 p-5 sm:p-8 lg:p-10">
         <span className="block font-heading text-[0.68rem] font-bold tracking-[0.3em] text-brand-light uppercase">
           Film {pad(index + 1)}
         </span>
@@ -193,17 +197,18 @@ export function Films() {
             scrollTrigger: { trigger: q(".fm-feature")[0], start: "top 80%", once: true },
             defaults: { ease: "expo.inOut" },
           })
-          // like a cinema screen: a thin line of light that opens up to the full picture
+          // like a cinema screen: a thin line of light that opens up to the full picture — two dark
+          // bars sliding apart (light for phones to draw, unlike reshaping the picture itself)
           .fromTo(
-            q(".fm-feature"),
-            { clipPath: "inset(49% 0% 49% 0% round 6px)" },
-            { clipPath: "inset(0% 0% 0% 0% round 6px)", duration: 1.5 },
+            q(".fm-feature .fm-bar"),
+            { autoAlpha: 1, yPercent: (i: number) => (i ? 4 : -4) },
+            { yPercent: (i: number) => (i ? 101 : -101), duration: 1.5 },
             0,
           )
           .from(q(".fm-feature .fm-poster"), { scale: 1.25, duration: 2.2, ease: "expo.out" }, 0.2)
           .from(q(".fm-feature .fm-play"), { scale: 0, duration: 1, ease: "back.out(1.7)" }, 0.9)
           .from(
-            q(".fm-feature > span:last-child > span"),
+            q(".fm-feature-text > span"),
             { autoAlpha: 0, y: 24, duration: 1, stagger: 0.08, ease: "expo.out" },
             0.9,
           );
