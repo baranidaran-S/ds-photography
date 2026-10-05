@@ -236,7 +236,7 @@ export function Footer() {
             <span aria-hidden className="mx-2.5 text-cream/25">
               ·
             </span>
-            Designed by{" "}
+            Designed & developed by{" "}
             <a
               href={footer.credit.url || undefined}
               target="_blank"

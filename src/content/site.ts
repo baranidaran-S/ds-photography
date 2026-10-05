@@ -418,14 +418,14 @@ export const reviews: Review[] = [
 // Instagram strip. TODO: put the client's handle and their profile link
 // (e.g. https://www.instagram.com/their_handle/). Photos: photos.ts → instagram.
 export const instagram = {
-  handle: "dsphotography",
+  handle: "ds_photography",
   url: "https://www.instagram.com/ds_photography/?hl=en",
 };
 
 // Contact section. TODO: replace every value with the studio's real details. Photo: photos.ts → contact.
 export const contact = {
   phone: "+91 99948 24771",
-  email: "hello@dsphotography.in",
+  email: "dsstudiomadurai@gmail.com",
   address: ["1st Floor, 29/2, Aruppukottai Rd, near : Little Diamonds School, Villapuram, Madurai, Tamil Nadu 625012"],
   hours: ["Mon – Sat · 9 am – 8 pm", "Sunday by appointment"],
   /** The strip under the photo */

@@ -43,7 +43,8 @@ export type Photo = {
    src      → the menu bar;  full → the footer (shown larger)
    height   → how tall the mark shows on computers, in pixels (phones and the scrolled bar show it smaller)
    showText → also write "PHOTOGRAPHY" under it; set to false if your logo file already has the name
-   (The small icon in the browser tab is a separate file: src/app/favicon.ico) */
+   (The browser-tab icon is separate, made from this logo on a dark square: src/app/favicon.ico,
+   src/app/icon.png and src/app/apple-icon.png for iPhone home screens) */
 const logo = {
   src: "/images/logo/ds-final-mark.png",
   full: "/images/logo/ds-final-mark.png",
@@ -424,7 +425,7 @@ const instagram: (Photo & { likes?: string })[] = [
    A tall crop works best; `position` keeps the couple in view. */
 const contactPhoto: Photo = {
   src: "/images/hero/contact.jpg",
-  alt: "Bride and groom bowing to each other at the varmala, sparklers behind them",
+  alt: "Bride and groom exchanging wedding garlands during a traditional Hindu wedding ceremony at a temple.",
   position: "62% 45%",
 };
 
