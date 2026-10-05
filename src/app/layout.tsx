@@ -36,7 +36,7 @@ const body = Lato({
 });
 
 export const metadata: Metadata = {
-  title: "DS Photography | Wedding, Maternity, Newborn & Birthday Photography",
+  title: "DS Photography | Wedding, Engagement, Newborn & Birthday Photography",
   description:
     "DS Photography captures weddings, engagements, pre-wedding shoots, maternity, baby showers, newborns and birthdays. Book your shoot on WhatsApp.",
 };
