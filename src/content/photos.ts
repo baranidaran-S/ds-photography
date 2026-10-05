@@ -96,8 +96,8 @@ const hero = {
 } satisfies Record<string, Photo>;
 
 /* ── 2. SERVICES — the camera viewfinder (7 services × 2 photos) ─────────────
-   wide → landscape photo, shown on computers and tablets (and in the small thumbnails)
-   tall → portrait photo, shown on phones
+   wide → landscape photo, shown on computers and tablets (big picture and its small thumbnail)
+   tall → portrait photo, shown on phones (big picture and its small thumbnail)
    Folder: public/images/services   (the same file can be used for both, like Baby shower) */
 const services = {
   weddings: {

@@ -100,6 +100,17 @@ export function Services() {
         });
       };
 
+      // Phones and tablets swipe the thumbnails sideways: keep the active one in view as the
+      // slideshow moves on (only the strip scrolls, never the page)
+      const strip = thumbs[0]?.parentElement;
+      const showThumb = (i: number) => {
+        if (!strip || strip.scrollWidth <= strip.clientWidth + 1) return;
+        const box = strip.getBoundingClientRect();
+        const t = thumbs[i].getBoundingClientRect();
+        const left = strip.scrollLeft + (t.left - box.left) - (box.width - t.width) / 2;
+        strip.scrollTo({ left, behavior: reduce ? "auto" : "smooth" });
+      };
+
       // Photos after the first wait (display: none, so they don't download with the page);
       // the next one is woken while the current one is on screen
       const wake = (i: number) => slides[i]?.removeAttribute("data-wait");
@@ -132,6 +143,7 @@ export function Services() {
           t.toggleAttribute("data-active", k === next);
           t.setAttribute("aria-pressed", String(k === next));
         });
+        showThumb(next);
         setReadout(next);
 
         const swap = () => {
@@ -503,12 +515,21 @@ export function Services() {
               className="vf-thumb group w-28 shrink-0 snap-start text-left sm:w-32 lg:w-auto"
             >
               <span className="relative block aspect-[3/2] overflow-hidden rounded-[3px] ring-1 ring-cream/15 transition duration-500 group-hover:ring-cream/40 group-data-active:ring-brand">
+                {/* the same photo as the big picture: the tall one on phones, the wide one from tablets up */}
+                <Image
+                  src={s.tall.src}
+                  alt=""
+                  fill
+                  sizes="180px"
+                  className="object-cover opacity-50 grayscale transition duration-500 group-hover:opacity-90 group-hover:grayscale-0 group-data-active:opacity-100 group-data-active:grayscale-0 sm:hidden"
+                  style={{ objectPosition: s.tall.position }}
+                />
                 <Image
                   src={s.wide.src}
                   alt=""
                   fill
                   sizes="180px"
-                  className="object-cover opacity-50 grayscale transition duration-500 group-hover:opacity-90 group-hover:grayscale-0 group-data-active:opacity-100 group-data-active:grayscale-0"
+                  className="hidden object-cover opacity-50 grayscale transition duration-500 group-hover:opacity-90 group-hover:grayscale-0 group-data-active:opacity-100 group-data-active:grayscale-0 sm:block"
                   style={{ objectPosition: s.wide.position }}
                 />
               </span>

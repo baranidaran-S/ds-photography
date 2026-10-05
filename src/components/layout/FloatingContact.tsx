@@ -24,39 +24,18 @@ function WhatsAppIcon({ className = "size-7" }: { className?: string }) {
 }
 
 /** WhatsApp button in the bottom-right corner. It pops in once the visitor scrolls past the hero,
-    says hello once, and pulses and wiggles now and then (animations in globals.css → .fab). */
+    and pulses and wiggles now and then (animations in globals.css → .fab). */
 export function FloatingContact() {
   const root = useRef<HTMLDivElement>(null);
 
   useGSAP(() => {
     const el = root.current;
     if (!el) return;
-    let greeted = false;
-    const timers: number[] = [];
-
     ScrollTrigger.create({
       start: () => window.innerHeight * 0.6,
       end: "max",
-      onToggle: (self) => {
-        el.toggleAttribute("data-visible", self.isActive);
-        if (!self.isActive) {
-          el.removeAttribute("data-greet");
-          return;
-        }
-        // the greeting bubble shows once, a moment after the button first appears
-        if (!greeted) {
-          greeted = true;
-          timers.push(
-            window.setTimeout(() => el.setAttribute("data-greet", ""), 1400),
-          );
-          timers.push(
-            window.setTimeout(() => el.removeAttribute("data-greet"), 7400),
-          );
-        }
-      },
+      onToggle: (self) => el.toggleAttribute("data-visible", self.isActive),
     });
-
-    return () => timers.forEach((t) => window.clearTimeout(t));
   });
 
   return (
@@ -80,17 +59,6 @@ export function FloatingContact() {
           className="fab-ring fab-ring-2 absolute inset-0 rounded-full bg-[#25d366]"
         />
         <WhatsAppIcon className="fab-icon relative size-[2rem]" />
-
-        {/* greeting bubble */}
-        <span
-          aria-hidden
-          className="fab-greet absolute right-full bottom-1/2 mr-4 w-max max-w-[min(15rem,calc(100vw-7rem))] rounded-[14px] rounded-br-[4px] bg-cream px-4 py-3 text-left text-ink shadow-[0_16px_34px_-14px_rgb(0_0_0/0.55)] ring-1 ring-black/5"
-        >
-          <span className="block text-[0.72rem] text-ink/55">Hi there 👋</span>
-          <span className="mt-0.5 block text-[0.86rem] leading-snug font-medium">
-            Planning a celebration? Chat with us
-          </span>
-        </span>
       </a>
     </div>
   );
