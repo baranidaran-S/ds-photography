@@ -5,7 +5,7 @@ import { photos, type Photo } from "./photos";
 export const site = {
   name: "DS Photography",
   // TODO: replace with the client's WhatsApp number — country code + number, digits only (e.g. 919876543210)
-  whatsappNumber: "910000000000",
+  whatsappNumber: "919994824771",
   whatsappMessage: "Hi DS Photography! I'd like to book a photoshoot.",
 };
 

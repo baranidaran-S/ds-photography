@@ -369,7 +369,7 @@ export function Contact() {
                 aria-hidden
                 className="relative grid size-11 shrink-0 place-items-center"
               >
-                <span className="absolute inset-0 rounded-full bg-accent/25 motion-safe:animate-ping" />
+                <span className="absolute inset-0 rounded-full bg-accent/25" />
                 <span className="relative size-3 rounded-full bg-accent" />
               </span>
               <span className="min-w-0 flex-1">

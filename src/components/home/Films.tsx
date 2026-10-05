@@ -43,7 +43,7 @@ function Poster({ film, sizes }: { film: Film; sizes: string }) {
   );
 }
 
-/** Round play button with two soft rings pulsing out of it */
+/** Round play button */
 function PlayButton({ large }: { large?: boolean }) {
   return (
     <span
@@ -52,8 +52,6 @@ function PlayButton({ large }: { large?: boolean }) {
         large ? "size-20 sm:size-24" : "size-14 sm:size-16"
       }`}
     >
-      <span className="fm-ring absolute inset-0 rounded-full border border-cream/70" />
-      <span className="fm-ring fm-ring-2 absolute inset-0 rounded-full border border-cream/70" />
       <svg
         viewBox="0 0 24 24"
         className={`relative translate-x-[8%] fill-current ${large ? "size-7 sm:size-8" : "size-5 sm:size-6"}`}

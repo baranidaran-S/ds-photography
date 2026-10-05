@@ -244,7 +244,7 @@ export function Navbar() {
           aria-hidden
           className="menu-mandala absolute -right-40 -bottom-40 size-[520px] text-brand/15"
         >
-          <Mandala className="size-full motion-safe:animate-spin-slow" />
+          <Mandala className="size-full" />
         </div>
 
         <div className="relative flex h-full flex-col justify-between px-6 pt-32 pb-10 sm:px-10">

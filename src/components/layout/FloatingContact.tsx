@@ -23,8 +23,8 @@ function WhatsAppIcon({ className = "size-7" }: { className?: string }) {
   );
 }
 
-/** WhatsApp button in the bottom-right corner. It pops in once the visitor scrolls past the hero,
-    and pulses and wiggles now and then (animations in globals.css → .fab). */
+/** WhatsApp button in the bottom-right corner. It pops in once the visitor scrolls past the hero
+    (globals.css → .fab). */
 export function FloatingContact() {
   const root = useRef<HTMLDivElement>(null);
 
@@ -50,15 +50,7 @@ export function FloatingContact() {
         aria-label="Chat with us on WhatsApp"
         className="fab-btn relative grid size-[3.75rem] place-items-center rounded-full bg-[#25d366] text-white shadow-[0_14px_30px_-10px_rgb(0_0_0/0.55)]"
       >
-        <span
-          aria-hidden
-          className="fab-ring absolute inset-0 rounded-full bg-[#25d366]"
-        />
-        <span
-          aria-hidden
-          className="fab-ring fab-ring-2 absolute inset-0 rounded-full bg-[#25d366]"
-        />
-        <WhatsAppIcon className="fab-icon relative size-[2rem]" />
+        <WhatsAppIcon className="size-[2rem]" />
       </a>
     </div>
   );

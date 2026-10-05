@@ -12,14 +12,6 @@
   --color-ink: #1e1612; /* body text on cream */
 
   --ease-luxe: cubic-bezier(0.2, 0.7, 0.2, 1);
-
-  --animate-spin-slow: slow-spin 60s linear infinite;
-
-  @keyframes slow-spin {
-    to {
-      transform: rotate(360deg);
-    }
-  }
 }
 
 :root {
@@ -237,27 +229,6 @@
   }
   .fab[data-visible] .fab-btn:hover {
     scale: 1.08;
-  }
-  .fab-ring {
-    opacity: 0;
-  }
-  /* Films: rings pulsing out of each play button */
-  .fm-ring {
-    opacity: 0;
-  }
-  @media (prefers-reduced-motion: no-preference) {
-    .fab-ring,
-    .fm-ring {
-      animation: fab-pulse 2.8s ease-out infinite;
-    }
-    .fab-ring-2,
-    .fm-ring-2 {
-      animation-delay: 1.4s;
-    }
-    .fab-icon {
-      transform-origin: 50% 60%;
-      animation: fab-wiggle 6s ease-in-out 2s infinite;
-    }
   }
 
   /* Foil text with a slow shimmer, built from the brand colour */
@@ -720,43 +691,6 @@
   }
   .rv-ticks {
     color: color-mix(in oklab, var(--color-accent) 80%, black);
-  }
-}
-
-/* the WhatsApp icon gives a little 'ringing' shake every few seconds */
-@keyframes fab-wiggle {
-  0%,
-  82%,
-  100% {
-    rotate: 0deg;
-  }
-  85% {
-    rotate: -14deg;
-  }
-  88% {
-    rotate: 12deg;
-  }
-  91% {
-    rotate: -8deg;
-  }
-  94% {
-    rotate: 5deg;
-  }
-  97% {
-    rotate: -2deg;
-  }
-}
-
-/* soft ring that grows out of the WhatsApp button */
-@keyframes fab-pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.45;
-  }
-  70%,
-  100% {
-    transform: scale(1.45);
-    opacity: 0;
   }
 }
 

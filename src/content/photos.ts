@@ -58,10 +58,10 @@ const logo = {
    The slideshow plays them in this order. The names under each photo are in site.ts (heroSlides). */
 const hero = {
   weddings: {
-    src: "/images/hero/wedding.jpg",
-    alt: "Bride in a red lehenga and groom in an ivory sherwani bowing to each other at the varmala, sparklers behind",
-    position: "50% 30%",
-    mobilePosition: "64% 50%",
+    src: "/images/hero/new wedding.jpg",
+    alt: "Bride and groom in flower garlands greeting guests with folded hands as family cheer and shower petals",
+    position: "0% 30%",
+    mobilePosition: "55% 50%",
   },
   haldi: {
     src: "/images/hero/haldi.jpg",
@@ -70,10 +70,10 @@ const hero = {
     mobilePosition: "50% 50%",
   },
   preWedding: {
-    src: "/images/hero/pre-wedding.jpg",
-    alt: "Couple holding hands under an old stone archway at sunset",
+    src: "/images/hero/hero5.jpg",
+    alt: "Couple standing close in front of a grand old arched gateway on a misty day",
     position: "50% 50%",
-    mobilePosition: "52% 50%",
+    mobilePosition: "72% 50%",
   },
   maternity: {
     src: "/images/hero/maternity1.jpg",
@@ -88,9 +88,9 @@ const hero = {
     mobilePosition: "52% 50%",
   },
   birthdays: {
-    src: "/images/hero/birthday.jpg",
-    alt: "Little girl in a red party dress at her first birthday photoshoot with balloons",
-    position: "50% 50%",
+    src: "/images/hero/hero7.png",
+    alt: "Little girl in a purple party dress holding up a gold number 5 balloon on a lawn",
+    position: "0% 50%",
     mobilePosition: "50% 50%",
   },
 } satisfies Record<string, Photo>;

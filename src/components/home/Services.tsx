@@ -404,7 +404,7 @@ export function Services() {
             className="vf-hud pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-12 pt-5 font-mono text-[0.62rem] tracking-[0.14em] text-cream/85 uppercase sm:px-20 sm:pt-8 sm:text-[0.7rem]"
           >
             <span className="flex items-center gap-2.5">
-              <span className="size-1.5 animate-pulse rounded-full bg-accent" />
+              <span className="size-1.5 rounded-full bg-accent" />
               <span className="hidden text-cream/55 sm:inline">Mode</span>
               <span className="vf-mode text-brand-light">{first.name.toUpperCase()}</span>
             </span>
