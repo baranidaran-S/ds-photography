@@ -56,8 +56,13 @@ export function Hero() {
           );
         };
 
+        // Photos after the first wait (display: none, so they don't download with the page);
+        // each one is woken while the photo before it plays
+        const wake = (i: number) => slides[i]?.removeAttribute("data-wait");
+
         const runProgress = () => {
           progress?.kill();
+          wake((current + 1) % slides.length);
           gsap.set(dotFills, { scaleX: 0 });
           progress = gsap.fromTo(
             dotFills[current],
@@ -78,6 +83,7 @@ export function Hero() {
           const prev = current;
           current = next;
           const incoming = slides[next];
+          wake(next); // a dot can jump ahead to a photo that hasn't been woken yet
 
           gsap.set(slides, { zIndex: 1 });
           gsap.set(slides[prev], { zIndex: 2 });
@@ -320,7 +326,8 @@ export function Hero() {
             {heroSlides.map((slide, i) => (
               <div
                 key={slide.src}
-                className="hero-slide absolute inset-0 overflow-hidden"
+                data-wait={i > 0 ? "" : undefined}
+                className="hero-slide absolute inset-0 overflow-hidden data-wait:hidden"
                 style={{ zIndex: i === 0 ? 3 : 1 }}
               >
                 <Image
@@ -328,7 +335,8 @@ export function Hero() {
                   alt={slide.alt}
                   fill
                   preload={i === 0}
-                  sizes="(max-aspect-ratio: 3/2) 160vh, 108vw"
+                  // phones held upright get a lighter file: plenty sharp behind the shading and text
+                  sizes="(orientation: portrait) 75vh, (max-aspect-ratio: 3/2) 160vh, 108vw"
                   className="object-cover [object-position:var(--pos-m)] lg:[object-position:var(--pos)]"
                   style={{ "--pos": slide.position, "--pos-m": slide.mobilePosition } as React.CSSProperties}
                 />
@@ -466,7 +474,9 @@ export function Hero() {
           ))}
         </div>
       </section>
-      <div aria-hidden className="hero-room" />
+      {/* scroll room for the hold; sized from the start (the script fine-tunes it) so the sections
+          below don't count as "near the screen" and download their photos early */}
+      <div aria-hidden className="hero-room h-[250svh] motion-reduce:h-0" />
     </div>
   );
 }

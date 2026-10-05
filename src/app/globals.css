@@ -185,11 +185,11 @@
       padding-block: 1.5rem;
     }
   }
+  /* (a near-solid colour rather than a frosted-glass blur, which phones redraw on every scroll frame) */
   .site-header[data-scrolled]:not([data-open]) {
     padding-block: 1.1rem;
-    background: color-mix(in oklab, var(--color-night) 88%, transparent);
+    background: color-mix(in oklab, var(--color-night) 95%, transparent);
     box-shadow: 0 1px 0 color-mix(in oklab, var(--color-brand) 45%, transparent);
-    backdrop-filter: blur(12px);
   }
   .site-header[data-hidden]:not([data-open]) {
     /* extra offset so the bottom rule and button don't peek in */

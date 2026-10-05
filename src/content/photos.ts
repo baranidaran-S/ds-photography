@@ -298,7 +298,7 @@ const albumCover = {
    the big centre tile ("50% 0%" = keep the top of the photo).   Folder: public/images/about */
 const about = {
   portrait: {
-    src: "/images/about/Confident Portrait Beside a DDiS Car.png",
+    src: "/images/about/sivakumar.jpg", // JPG copy of "Confident Portrait Beside a DDiS Car.png" (2.4 MB → 360 KB)
     alt: "Sivakumar, founder of DS Photography, smiling with his arms crossed",
     position: "50% 0%",
   },
@@ -433,7 +433,7 @@ const contactPhoto: Photo = {
    Leave src empty ("") to keep the drawn background (soft bokeh lights + camera aperture).
    Use a very light, soft, out-of-focus image; the site lays cream over it so the text stays readable. */
 const contactBackdrop: Photo = {
-  src: "/images/hero/contact1.png",
+  src: "/images/hero/contact-bg.jpg", // JPG copy of contact1.png (1.4 MB → 116 KB)
   alt: "",
   position: "50% 50%",
 };

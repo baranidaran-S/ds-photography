@@ -48,7 +48,7 @@ function PlayButton({ large }: { large?: boolean }) {
   return (
     <span
       aria-hidden
-      className={`fm-play absolute top-1/2 left-1/2 grid -translate-1/2 place-items-center rounded-full bg-cream/90 text-night shadow-[0_18px_40px_-12px_rgb(0_0_0/0.6)] backdrop-blur-sm transition-[background-color,color,scale] duration-500 ease-luxe group-hover:scale-110 group-hover:bg-brand group-focus-visible:bg-brand ${
+      className={`fm-play absolute top-1/2 left-1/2 grid -translate-1/2 place-items-center rounded-full bg-cream/90 text-night shadow-[0_18px_40px_-12px_rgb(0_0_0/0.6)] transition-[background-color,color,scale] duration-500 ease-luxe group-hover:scale-110 group-hover:bg-brand group-focus-visible:bg-brand ${
         large ? "size-20 sm:size-24" : "size-14 sm:size-16"
       }`}
     >

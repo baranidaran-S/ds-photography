@@ -98,10 +98,15 @@ export function Services() {
         });
       };
 
+      // Photos after the first wait (display: none, so they don't download with the page);
+      // the next one is woken while the current one is on screen
+      const wake = (i: number) => slides[i]?.removeAttribute("data-wait");
+
       const startProgress = () => {
         progress?.kill();
         gsap.set(fills, { scaleX: 0 });
         if (!inView) return;
+        wake((current + 1) % total);
         progress = gsap.fromTo(
           fills[current],
           { scaleX: 0 },
@@ -118,6 +123,7 @@ export function Services() {
         // Clicking the photo already showing takes the shot again
         busy = true;
         progress?.kill();
+        wake(next); // a thumbnail can jump to a photo that hasn't been woken yet
         const prev = current;
         current = next;
         thumbs.forEach((t, k) => {
@@ -309,7 +315,11 @@ export function Services() {
         >
           {/* Photos */}
           {serviceDetails.map((s, i) => (
-            <div key={s.name} className={`vf-slide absolute inset-0 ${i ? "invisible" : ""}`}>
+            <div
+              key={s.name}
+              data-wait={i ? "" : undefined}
+              className={`vf-slide absolute inset-0 data-wait:hidden ${i ? "invisible" : ""}`}
+            >
               <Image
                 src={s.tall.src}
                 alt={s.tall.alt}

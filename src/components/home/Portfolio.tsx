@@ -1,7 +1,7 @@
 "use client";
 
 import Image, { getImageProps } from "next/image";
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type Lenis from "lenis";
 import { useLenis } from "lenis/react";
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
@@ -20,8 +20,9 @@ const coverTexture = cover.src
   ? getImageProps({
       src: cover.src,
       alt: "",
-      width: 1200,
-      height: 1200,
+      // a texture for the board edges: about 1200px is plenty (it is softened by the leather shading)
+      width: 600,
+      height: 600,
       quality: 75,
     }).props.src
   : null;
@@ -286,6 +287,9 @@ export function Portfolio() {
     motionAllowed,
     () => false,
   );
+  // The open spread: only the two pages that can turn from it keep a bending copy, which keeps the
+  // page light (each copy repeats a whole page eight times)
+  const [spread, setSpread] = useState(0);
 
   useGSAP(
     () => {
@@ -418,7 +422,8 @@ export function Portfolio() {
           };
           const rigs: Rig[] = [];
           const rigOf = (i: number) => {
-            if (rigs[i]?.strips.length) return rigs[i];
+            // a page's bending copy comes and goes with the open spread, so check it's still there
+            if (rigs[i]?.strips[0]?.isConnected) return rigs[i];
             const leaf = leaves[i];
             const strips = Array.from(
               leaf.querySelectorAll<HTMLElement>(":scope > .pf-curl .pf-strip"),
@@ -533,6 +538,7 @@ export function Portfolio() {
             if (k === state) return;
             const first = state === -1;
             state = k;
+            setSpread(k);
 
             if (instant || reduce) {
               tl.time(k);
@@ -727,10 +733,15 @@ export function Portfolio() {
                     <span aria-hidden className="pf-shade" />
                   </div>
                 )}
-                {/* paper pages (not the stiff cover) get a bending copy for turning */}
-                {canCurl && i > 0 && leaf.back && (
-                  <Curl front={leaf.front} back={leaf.back} />
-                )}
+                {/* paper pages (not the stiff cover) get a bending copy for turning: only the page
+                    that turns forward from the open spread (i = spread) and the one that turns back
+                    (i = spread − 1); any other page turning in a quick flick turns stiffly */}
+                {canCurl &&
+                  i > 0 &&
+                  leaf.back &&
+                  (i === spread || i === spread - 1) && (
+                    <Curl front={leaf.front} back={leaf.back} />
+                  )}
               </div>
             ))}
           </div>
