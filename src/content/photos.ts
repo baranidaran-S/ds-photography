@@ -70,10 +70,10 @@ const hero = {
     mobilePosition: "50% 50%",
   },
   preWedding: {
-    src: "/images/hero/hero5.jpg",
-    alt: "Couple standing close in front of a grand old arched gateway on a misty day",
+    src: "/images/hero/newpostwedding.jpg",
+    alt: "Couple standing forehead to forehead on a lantern-lit balcony with white pillars",
     position: "50% 50%",
-    mobilePosition: "72% 50%",
+    mobilePosition: "48% 50%",
   },
   maternity: {
     src: "/images/hero/maternity1.jpg",

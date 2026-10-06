@@ -21,7 +21,8 @@ export function useAnchorScroll() {
 
       if (lenis) {
         lenis.start();
-        lenis.scrollTo(target, { offset: NAV_OFFSET, duration: 1.4 });
+        // tagged so the hero lets this scroll pass instead of stopping on its arch
+        lenis.scrollTo(target, { offset: NAV_OFFSET, duration: 1.4, userData: { anchor: true } });
       } else if (target === 0) {
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
