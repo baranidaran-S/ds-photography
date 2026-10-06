@@ -685,7 +685,10 @@ export function Portfolio() {
       </div>
 
       {/* Album: pinned while its pages turn */}
-      <div className="pf-stage relative flex h-svh flex-col items-center justify-center px-5 sm:px-8">
+      <div
+        data-nav-view
+        className="pf-stage relative flex h-svh flex-col items-center justify-center px-5 sm:px-8"
+      >
         {/* Backdrop: soft studio light with window-blind shadows slowly drifting across */}
         <div
           aria-hidden

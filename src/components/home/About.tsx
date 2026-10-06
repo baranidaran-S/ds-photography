@@ -188,7 +188,10 @@ export function About() {
         className="pointer-events-none absolute top-0 left-[-10%] h-[44rem] w-[44rem] rounded-full bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--color-brand)_12%,transparent),transparent)]"
       />
 
-      <div className="relative mx-auto grid max-w-[1320px] items-center gap-20 px-5 sm:px-8 lg:grid-cols-[1fr_1.12fr] lg:gap-24 lg:px-12">
+      <div
+        data-nav-view
+        className="relative mx-auto grid max-w-[1320px] items-center gap-20 px-5 sm:px-8 lg:grid-cols-[1fr_1.12fr] lg:gap-24 lg:px-12"
+      >
         {/* Photo mosaic */}
         <div className="ab-media relative mx-auto w-full max-w-[24rem] sm:max-w-[30rem] lg:mx-0 lg:max-w-[34rem]">
           <div className="ab-mosaic relative aspect-[100/108] w-full">

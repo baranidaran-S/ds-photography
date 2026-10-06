@@ -250,7 +250,10 @@ export function Contact() {
         <div className="pf-grain absolute inset-0 opacity-30" />
       </div>
 
-      <div className="relative mx-auto grid max-w-[1320px] items-center gap-14 px-5 sm:px-8 lg:grid-cols-[1fr_1.05fr] lg:gap-20 lg:px-12">
+      <div
+        data-nav-view
+        className="relative mx-auto grid max-w-[1320px] items-center gap-14 px-5 sm:px-8 lg:grid-cols-[1fr_1.05fr] lg:gap-20 lg:px-12"
+      >
         {/* Details */}
         <div>
           <p className="ct-eyebrow mb-5 flex items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-accent-deep uppercase">

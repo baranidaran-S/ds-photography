@@ -323,225 +323,228 @@ export function Services() {
           </p>
         </div>
 
-        {/* Viewfinder */}
-        <div
-          className="vf relative mx-auto aspect-[4/5] w-full touch-pan-y overflow-hidden rounded-[4px] bg-black select-none sm:aspect-[3/2] sm:w-[min(100%,calc(76svh*1.5))]"
-          aria-roledescription="carousel"
-          aria-label="Our services"
-        >
-          {/* Photos */}
-          {serviceDetails.map((s, i) => (
-            <div
-              key={s.name}
-              data-wait={i ? "" : undefined}
-              className={`vf-slide absolute inset-0 data-wait:hidden ${i ? "invisible" : ""}`}
-            >
-              <Image
-                src={s.tall.src}
-                alt={s.tall.alt}
-                fill
-                sizes="100vw"
-                className="object-cover sm:hidden"
-                style={{ objectPosition: s.tall.position }}
-              />
-              <Image
-                src={s.wide.src}
-                alt={s.wide.alt}
-                fill
-                sizes="(min-width: 1320px) 1224px, 100vw"
-                className="hidden object-cover sm:block"
-                style={{ objectPosition: s.wide.position }}
-              />
-            </div>
-          ))}
-
-          {/* Shading: soft vignette + dark base for the text */}
+        {/* What the menu link shows: the viewfinder and its thumbnails (see useAnchorScroll) */}
+        <div data-nav-view>
+          {/* Viewfinder */}
           <div
-            aria-hidden
-            className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgb(0_0_0/0.45)_100%)]"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-3/5 bg-gradient-to-t from-black/85 via-black/40 to-transparent"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 z-10 h-28 bg-gradient-to-b from-black/55 to-transparent"
-          />
-
-          {/* Rule-of-thirds grid */}
-          <div aria-hidden className="vf-grid pointer-events-none absolute inset-0 z-10 hidden sm:block">
-            <span className="absolute inset-y-0 left-1/3 w-px bg-cream/12" />
-            <span className="absolute inset-y-0 left-2/3 w-px bg-cream/12" />
-            <span className="absolute inset-x-0 top-1/3 h-px bg-cream/12" />
-            <span className="absolute inset-x-0 top-2/3 h-px bg-cream/12" />
-          </div>
-
-          {/* Frame corners */}
-          {cornerClasses.map((c, i) => (
-            <span
-              key={i}
-              aria-hidden
-              className={`vf-corner pointer-events-none absolute z-20 size-7 border-cream/85 sm:size-10 ${c}`}
-            />
-          ))}
-
-          {/* Focus box */}
-          <div
-            aria-hidden
-            className="vf-focus pointer-events-none absolute top-[42%] left-1/2 z-20 -mt-6 -ml-9 h-12 w-[4.5rem] text-cream sm:top-1/2 sm:-mt-8 sm:-ml-12 sm:h-16 sm:w-24"
+            className="vf relative mx-auto aspect-[4/5] w-full touch-pan-y overflow-hidden rounded-[4px] bg-black select-none sm:aspect-[3/2] sm:w-[min(100%,calc(76svh*1.5))]"
+            aria-roledescription="carousel"
+            aria-label="Our services"
           >
-            <span className="absolute top-0 left-0 size-3 border-t border-l border-current" />
-            <span className="absolute top-0 right-0 size-3 border-t border-r border-current" />
-            <span className="absolute bottom-0 left-0 size-3 border-b border-l border-current" />
-            <span className="absolute right-0 bottom-0 size-3 border-r border-b border-current" />
-            <span className="absolute top-1/2 left-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current" />
-          </div>
-
-          {/* Top readout */}
-          <div
-            aria-hidden
-            className="vf-hud pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-12 pt-5 font-mono text-[0.62rem] tracking-[0.14em] text-cream/85 uppercase sm:px-20 sm:pt-8 sm:text-[0.7rem]"
-          >
-            <span className="flex items-center gap-2.5">
-              <span className="size-1.5 rounded-full bg-accent" />
-              <span className="hidden text-cream/55 sm:inline">Mode</span>
-              <span className="vf-mode text-brand-light">{first.name.toUpperCase()}</span>
-            </span>
-            <span className="flex items-center gap-3 sm:gap-4">
-              <span className="hidden sm:inline">RAW</span>
-              <span className="hidden items-center gap-0.5 sm:flex">
-                <span className="h-2.5 w-5 rounded-[2px] border border-cream/70 p-px">
-                  <span className="block h-full w-3/4 bg-cream/80" />
-                </span>
-                <span className="h-1 w-0.5 bg-cream/70" />
-              </span>
-              <span className="vf-count tabular-nums">{`01/${pad(total)}`}</span>
-            </span>
-          </div>
-
-          {/* Service name and enquiry */}
-          <div className="absolute inset-x-0 bottom-0 z-20 p-6 pb-7 sm:max-w-[60%] sm:p-10 lg:p-12">
-            <div className="grid">
-              {serviceDetails.map((s, i) => (
-                <h3
-                  key={s.name}
-                  className={`vf-name overflow-hidden pb-[0.08em] [grid-area:1/1] ${i ? "invisible" : ""}`}
-                >
-                  <span className="block font-display text-[clamp(2.2rem,5vw,4.4rem)] leading-[1.05]">
-                    {s.name}
-                  </span>
-                </h3>
-              ))}
-            </div>
-            <div className="mt-5 grid justify-items-start">
-              {serviceDetails.map((s, i) => (
-                <a
-                  key={s.name}
-                  href={enquiry(s.name)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`vf-cta btn-brand btn-sm [grid-area:1/1] ${i ? "invisible" : ""}`}
-                  aria-label={`Enquire about ${s.name} on WhatsApp`}
-                >
-                  <ChatIcon className="size-4" />
-                  Enquire
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {/* Bottom-right exposure readout (desktop) */}
-          <div
-            aria-hidden
-            className="vf-hud pointer-events-none absolute right-0 bottom-0 z-20 hidden flex-col items-end gap-3 p-10 font-mono text-[0.7rem] tracking-[0.12em] text-cream/85 uppercase lg:flex lg:p-12"
-          >
-            <span className="flex gap-5 tabular-nums">
-              <span className="vf-lens">{first.exif.lens}</span>
-              <span className="vf-shutter">{first.exif.shutter}</span>
-              <span className="vf-aperture text-brand-light">{first.exif.aperture}</span>
-              <span className="vf-iso">{first.exif.iso}</span>
-            </span>
-            <span className="flex items-end gap-[5px] text-[0.55rem] text-cream/55">
-              <span className="mr-1">-2</span>
-              {Array.from({ length: 13 }, (_, i) => (
-                <span
-                  key={i}
-                  className={`w-px ${i === 6 ? "h-3 bg-accent" : i % 3 === 0 ? "h-2 bg-cream/70" : "h-1 bg-cream/40"}`}
-                />
-              ))}
-              <span className="ml-1">+2</span>
-            </span>
-          </div>
-
-          {/* Shutter iris and flash */}
-          <svg
-            aria-hidden
-            className="pointer-events-none absolute inset-0 z-30 size-full"
-            viewBox="-100 -100 200 200"
-            preserveAspectRatio="xMidYMid slice"
-          >
-            <defs>
-              <mask id={maskId}>
-                <rect x="-1000" y="-1000" width="2000" height="2000" fill="white" />
-                <g className="vf-iris-move">
-                  <polygon points={octagonPoints} fill="black" />
-                </g>
-              </mask>
-            </defs>
-            <rect x="-1000" y="-1000" width="2000" height="2000" fill="#050505" mask={`url(#${maskId})`} />
-            <g className="vf-iris-move">
-              {bladeLines.map((l, i) => (
-                <line key={i} {...l} stroke="#2a2626" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
-              ))}
-            </g>
-          </svg>
-          <div
-            aria-hidden
-            className="vf-flash pointer-events-none absolute inset-0 z-40 bg-white opacity-0"
-          />
-        </div>
-
-        {/* Contact-sheet thumbnails */}
-        <div className="-mx-5 mt-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:mx-auto lg:grid lg:w-[min(100%,calc(76svh*1.5))] lg:grid-cols-7 lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden">
-          {serviceDetails.map((s, i) => (
-            <button
-              key={s.name}
-              type="button"
-              onClick={() => goTo.current(i)}
-              data-active={i === 0 ? "" : undefined}
-              aria-pressed={i === 0}
-              aria-label={`Show ${s.name}`}
-              className="vf-thumb group w-28 shrink-0 snap-start text-left sm:w-32 lg:w-auto"
-            >
-              <span className="relative block aspect-[3/2] overflow-hidden rounded-[3px] ring-1 ring-cream/15 transition duration-500 group-hover:ring-cream/40 group-data-active:ring-brand">
-                {/* the same photo as the big picture: the tall one on phones, the wide one from tablets up */}
+            {/* Photos */}
+            {serviceDetails.map((s, i) => (
+              <div
+                key={s.name}
+                data-wait={i ? "" : undefined}
+                className={`vf-slide absolute inset-0 data-wait:hidden ${i ? "invisible" : ""}`}
+              >
                 <Image
                   src={s.tall.src}
-                  alt=""
+                  alt={s.tall.alt}
                   fill
-                  sizes="180px"
-                  className="object-cover opacity-50 grayscale transition duration-500 group-hover:opacity-90 group-hover:grayscale-0 group-data-active:opacity-100 group-data-active:grayscale-0 sm:hidden"
+                  sizes="100vw"
+                  className="object-cover sm:hidden"
                   style={{ objectPosition: s.tall.position }}
                 />
                 <Image
                   src={s.wide.src}
-                  alt=""
+                  alt={s.wide.alt}
                   fill
-                  sizes="180px"
-                  className="hidden object-cover opacity-50 grayscale transition duration-500 group-hover:opacity-90 group-hover:grayscale-0 group-data-active:opacity-100 group-data-active:grayscale-0 sm:block"
+                  sizes="(min-width: 1320px) 1224px, 100vw"
+                  className="hidden object-cover sm:block"
                   style={{ objectPosition: s.wide.position }}
                 />
+              </div>
+            ))}
+
+            {/* Shading: soft vignette + dark base for the text */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 z-10 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgb(0_0_0/0.45)_100%)]"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-3/5 bg-gradient-to-t from-black/85 via-black/40 to-transparent"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 top-0 z-10 h-28 bg-gradient-to-b from-black/55 to-transparent"
+            />
+
+            {/* Rule-of-thirds grid */}
+            <div aria-hidden className="vf-grid pointer-events-none absolute inset-0 z-10 hidden sm:block">
+              <span className="absolute inset-y-0 left-1/3 w-px bg-cream/12" />
+              <span className="absolute inset-y-0 left-2/3 w-px bg-cream/12" />
+              <span className="absolute inset-x-0 top-1/3 h-px bg-cream/12" />
+              <span className="absolute inset-x-0 top-2/3 h-px bg-cream/12" />
+            </div>
+
+            {/* Frame corners */}
+            {cornerClasses.map((c, i) => (
+              <span
+                key={i}
+                aria-hidden
+                className={`vf-corner pointer-events-none absolute z-20 size-7 border-cream/85 sm:size-10 ${c}`}
+              />
+            ))}
+
+            {/* Focus box */}
+            <div
+              aria-hidden
+              className="vf-focus pointer-events-none absolute top-[42%] left-1/2 z-20 -mt-6 -ml-9 h-12 w-[4.5rem] text-cream sm:top-1/2 sm:-mt-8 sm:-ml-12 sm:h-16 sm:w-24"
+            >
+              <span className="absolute top-0 left-0 size-3 border-t border-l border-current" />
+              <span className="absolute top-0 right-0 size-3 border-t border-r border-current" />
+              <span className="absolute bottom-0 left-0 size-3 border-b border-l border-current" />
+              <span className="absolute right-0 bottom-0 size-3 border-r border-b border-current" />
+              <span className="absolute top-1/2 left-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-current" />
+            </div>
+
+            {/* Top readout */}
+            <div
+              aria-hidden
+              className="vf-hud pointer-events-none absolute inset-x-0 top-0 z-20 flex items-center justify-between px-12 pt-5 font-mono text-[0.62rem] tracking-[0.14em] text-cream/85 uppercase sm:px-20 sm:pt-8 sm:text-[0.7rem]"
+            >
+              <span className="flex items-center gap-2.5">
+                <span className="size-1.5 rounded-full bg-accent" />
+                <span className="hidden text-cream/55 sm:inline">Mode</span>
+                <span className="vf-mode text-brand-light">{first.name.toUpperCase()}</span>
               </span>
-              <span className="mt-2 flex items-center justify-between gap-2 font-mono text-[0.6rem] tracking-[0.12em] text-cream/50 uppercase transition-colors group-hover:text-cream/80 group-data-active:text-brand-light">
-                <span className="truncate">{s.name}</span>
-                <span className="tabular-nums">{pad(i + 1)}</span>
+              <span className="flex items-center gap-3 sm:gap-4">
+                <span className="hidden sm:inline">RAW</span>
+                <span className="hidden items-center gap-0.5 sm:flex">
+                  <span className="h-2.5 w-5 rounded-[2px] border border-cream/70 p-px">
+                    <span className="block h-full w-3/4 bg-cream/80" />
+                  </span>
+                  <span className="h-1 w-0.5 bg-cream/70" />
+                </span>
+                <span className="vf-count tabular-nums">{`01/${pad(total)}`}</span>
               </span>
-              <span className="relative mt-1.5 block h-px overflow-hidden bg-cream/15">
-                <span className="vf-thumb-fill absolute inset-0 origin-left scale-x-0 bg-accent" />
+            </div>
+
+            {/* Service name and enquiry */}
+            <div className="absolute inset-x-0 bottom-0 z-20 p-6 pb-7 sm:max-w-[60%] sm:p-10 lg:p-12">
+              <div className="grid">
+                {serviceDetails.map((s, i) => (
+                  <h3
+                    key={s.name}
+                    className={`vf-name overflow-hidden pb-[0.08em] [grid-area:1/1] ${i ? "invisible" : ""}`}
+                  >
+                    <span className="block font-display text-[clamp(2.2rem,5vw,4.4rem)] leading-[1.05]">
+                      {s.name}
+                    </span>
+                  </h3>
+                ))}
+              </div>
+              <div className="mt-5 grid justify-items-start">
+                {serviceDetails.map((s, i) => (
+                  <a
+                    key={s.name}
+                    href={enquiry(s.name)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`vf-cta btn-brand btn-sm [grid-area:1/1] ${i ? "invisible" : ""}`}
+                    aria-label={`Enquire about ${s.name} on WhatsApp`}
+                  >
+                    <ChatIcon className="size-4" />
+                    Enquire
+                  </a>
+                ))}
+              </div>
+            </div>
+
+            {/* Bottom-right exposure readout (desktop) */}
+            <div
+              aria-hidden
+              className="vf-hud pointer-events-none absolute right-0 bottom-0 z-20 hidden flex-col items-end gap-3 p-10 font-mono text-[0.7rem] tracking-[0.12em] text-cream/85 uppercase lg:flex lg:p-12"
+            >
+              <span className="flex gap-5 tabular-nums">
+                <span className="vf-lens">{first.exif.lens}</span>
+                <span className="vf-shutter">{first.exif.shutter}</span>
+                <span className="vf-aperture text-brand-light">{first.exif.aperture}</span>
+                <span className="vf-iso">{first.exif.iso}</span>
               </span>
-            </button>
-          ))}
+              <span className="flex items-end gap-[5px] text-[0.55rem] text-cream/55">
+                <span className="mr-1">-2</span>
+                {Array.from({ length: 13 }, (_, i) => (
+                  <span
+                    key={i}
+                    className={`w-px ${i === 6 ? "h-3 bg-accent" : i % 3 === 0 ? "h-2 bg-cream/70" : "h-1 bg-cream/40"}`}
+                  />
+                ))}
+                <span className="ml-1">+2</span>
+              </span>
+            </div>
+
+            {/* Shutter iris and flash */}
+            <svg
+              aria-hidden
+              className="pointer-events-none absolute inset-0 z-30 size-full"
+              viewBox="-100 -100 200 200"
+              preserveAspectRatio="xMidYMid slice"
+            >
+              <defs>
+                <mask id={maskId}>
+                  <rect x="-1000" y="-1000" width="2000" height="2000" fill="white" />
+                  <g className="vf-iris-move">
+                    <polygon points={octagonPoints} fill="black" />
+                  </g>
+                </mask>
+              </defs>
+              <rect x="-1000" y="-1000" width="2000" height="2000" fill="#050505" mask={`url(#${maskId})`} />
+              <g className="vf-iris-move">
+                {bladeLines.map((l, i) => (
+                  <line key={i} {...l} stroke="#2a2626" strokeWidth="1.2" vectorEffect="non-scaling-stroke" />
+                ))}
+              </g>
+            </svg>
+            <div
+              aria-hidden
+              className="vf-flash pointer-events-none absolute inset-0 z-40 bg-white opacity-0"
+            />
+          </div>
+
+          {/* Contact-sheet thumbnails */}
+          <div className="-mx-5 mt-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:mx-auto lg:grid lg:w-[min(100%,calc(76svh*1.5))] lg:grid-cols-7 lg:overflow-visible lg:px-0 [&::-webkit-scrollbar]:hidden">
+            {serviceDetails.map((s, i) => (
+              <button
+                key={s.name}
+                type="button"
+                onClick={() => goTo.current(i)}
+                data-active={i === 0 ? "" : undefined}
+                aria-pressed={i === 0}
+                aria-label={`Show ${s.name}`}
+                className="vf-thumb group w-28 shrink-0 snap-start text-left sm:w-32 lg:w-auto"
+              >
+                <span className="relative block aspect-[3/2] overflow-hidden rounded-[3px] ring-1 ring-cream/15 transition duration-500 group-hover:ring-cream/40 group-data-active:ring-brand">
+                  {/* the same photo as the big picture: the tall one on phones, the wide one from tablets up */}
+                  <Image
+                    src={s.tall.src}
+                    alt=""
+                    fill
+                    sizes="180px"
+                    className="object-cover opacity-50 grayscale transition duration-500 group-hover:opacity-90 group-hover:grayscale-0 group-data-active:opacity-100 group-data-active:grayscale-0 sm:hidden"
+                    style={{ objectPosition: s.tall.position }}
+                  />
+                  <Image
+                    src={s.wide.src}
+                    alt=""
+                    fill
+                    sizes="180px"
+                    className="hidden object-cover opacity-50 grayscale transition duration-500 group-hover:opacity-90 group-hover:grayscale-0 group-data-active:opacity-100 group-data-active:grayscale-0 sm:block"
+                    style={{ objectPosition: s.wide.position }}
+                  />
+                </span>
+                <span className="mt-2 flex items-center justify-between gap-2 font-mono text-[0.6rem] tracking-[0.12em] text-cream/50 uppercase transition-colors group-hover:text-cream/80 group-data-active:text-brand-light">
+                  <span className="truncate">{s.name}</span>
+                  <span className="tabular-nums">{pad(i + 1)}</span>
+                </span>
+                <span className="relative mt-1.5 block h-px overflow-hidden bg-cream/15">
+                  <span className="vf-thumb-fill absolute inset-0 origin-left scale-x-0 bg-accent" />
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </section>

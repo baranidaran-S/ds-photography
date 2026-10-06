@@ -24,7 +24,7 @@ function StatusBar({ clock }: { clock: string }) {
   return (
     <div
       aria-hidden
-      className="flex items-center justify-between bg-white px-5 pt-2.5 pb-1 text-[0.72rem] font-semibold"
+      className="rv-bar flex items-center justify-between px-5 pt-2.5 pb-1 text-[0.72rem] font-semibold"
     >
       <span className="tabular-nums">{clock}</span>
       <span className="flex items-center gap-1.5">
@@ -63,11 +63,11 @@ function StatusBar({ clock }: { clock: string }) {
 
 function ChatHeader({ review }: { review: Review }) {
   return (
-    <div className="flex items-center gap-2.5 border-b border-black/[0.06] bg-white px-2.5 pt-1 pb-2.5">
+    <div className="rv-bar flex items-center gap-2.5 px-2.5 pt-1 pb-2.5">
       <svg
         aria-hidden
         viewBox="0 0 24 24"
-        className={`${icon} text-accent-deep`}
+        className={icon}
         fill="none"
         stroke="currentColor"
         strokeWidth="2.2"
@@ -76,7 +76,7 @@ function ChatHeader({ review }: { review: Review }) {
       >
         <path d="m15 5-7 7 7 7" />
       </svg>
-      <span className="relative size-9 shrink-0 overflow-hidden rounded-full bg-black/5">
+      <span className="relative size-9 shrink-0 overflow-hidden rounded-full bg-white/15">
         <Image
           src={review.avatar.src}
           alt={review.avatar.alt}
@@ -91,14 +91,11 @@ function ChatHeader({ review }: { review: Review }) {
         <span className="block truncate text-[0.88rem] font-semibold">
           {review.name}
         </span>
-        <span className="block truncate text-[0.68rem] text-black/45">
+        <span className="block truncate text-[0.68rem] text-white/75">
           {review.status}
         </span>
       </span>
-      <span
-        aria-hidden
-        className="flex items-center gap-4 pr-1.5 text-accent-deep"
-      >
+      <span aria-hidden className="flex items-center gap-4 pr-1.5">
         <svg
           viewBox="0 0 24 24"
           className={icon}
@@ -173,7 +170,7 @@ function Bubble({ message, first }: { message: ChatMessage; first: boolean }) {
           {message.text && (
             <span className="text-[0.8rem] leading-[1.42]">{message.text}</span>
           )}
-          <span className="ml-auto flex items-center gap-1 pb-px text-[0.6rem] whitespace-nowrap text-black/45">
+          <span className="rv-meta ml-auto flex items-center gap-1 pb-px text-[0.6rem] whitespace-nowrap">
             {message.time}
             {mine && <ReadTicks />}
           </span>
@@ -196,14 +193,14 @@ function ChatShot({ review }: { review: Review }) {
   // a message needs text or a photo; skip any left empty in site.ts
   const messages = review.messages.filter((m) => m.text || m.photo);
   return (
-    <figure className="rv-shot overflow-hidden rounded-[26px] bg-white text-[#141414] ring-1 ring-black/[0.06]">
+    <figure className="rv-shot overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06]">
       <figcaption className="sr-only">
         Message from {review.name}, {review.shoot} shoot
       </figcaption>
       <StatusBar clock={review.clock} />
       <ChatHeader review={review} />
       <div className="rv-wall px-2.5 pt-3 pb-3.5">
-        <p className="mx-auto w-fit rounded-md bg-white/85 px-2 py-0.5 text-[0.62rem] font-medium text-black/50 shadow-[0_1px_0.5px_rgb(0_0_0/0.08)]">
+        <p className="rv-meta mx-auto w-fit rounded-md bg-white px-2 py-0.5 text-[0.62rem] font-medium shadow-[0_1px_0.5px_rgb(0_0_0/0.08)]">
           {review.date}
         </p>
         {messages.map((m, i) => (
@@ -222,7 +219,7 @@ function ChatShot({ review }: { review: Review }) {
         <span className="flex-1 rounded-full bg-white px-3.5 py-2 text-[0.74rem] text-black/35 shadow-[0_1px_0.5px_rgb(0_0_0/0.08)]">
           Message
         </span>
-        <span className="grid size-8 place-items-center rounded-full bg-accent-deep text-cream">
+        <span className="rv-mic grid size-8 place-items-center rounded-full">
           <svg
             viewBox="0 0 24 24"
             className="size-4"
@@ -351,7 +348,7 @@ export function Reviews() {
       </div>
 
       {/* Screenshots: a swipe row on phones, staggered columns from tablets up */}
-      <div className="mx-auto mt-12 max-w-[1180px] lg:mt-16">
+      <div data-nav-view className="mx-auto mt-12 max-w-[1180px] lg:mt-16">
         <div className="-mb-6 flex snap-x snap-mandatory scroll-px-5 gap-5 overflow-x-auto px-5 pt-4 pb-10 [scrollbar-width:none] md:mb-0 md:block md:columns-2 md:gap-10 md:overflow-visible md:px-8 md:pt-6 md:pb-0 lg:columns-3 lg:px-12 [&::-webkit-scrollbar]:hidden">
           {reviews.map((review, i) => (
             <div

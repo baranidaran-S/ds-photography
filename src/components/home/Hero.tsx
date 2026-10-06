@@ -297,12 +297,16 @@ export function Hero() {
             // hold (scrollbar drag, restored position): let it be, the change just plays along
             const jumpedPast = toArch ? self.progress >= 1 : self.progress <= 0;
             if (!lenis || lenis.userData.anchor || jumpedPast) return;
+            // On computers only the mouse wheel glides the page; dragging the scrollbar or using the
+            // keys moves it directly, so the page goes where it's taken and the change plays along
+            const coarse = window.matchMedia("(pointer: coarse)").matches;
+            if (!coarse && lenis.isScrolling !== "smooth") return;
             gliding = true;
             const to = toArch ? self.end : self.start;
             // Finger scrolling: hold the page still (which also stops the finger's leftover slide,
             // that would fight a moving page), let the change play, then jump to its end. The hero
             // is pinned all through the hold, so the jump can't be seen. Mouse wheels glide along.
-            if (window.matchMedia("(pointer: coarse)").matches) {
+            if (coarse) {
               lenis.stop();
               gsap.delayedCall(GLIDE_SECONDS, () => {
                 lenis.start();
