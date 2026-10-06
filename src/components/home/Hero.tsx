@@ -34,6 +34,7 @@ export function Hero() {
     (_, contextSafe) => {
       window.__dsReady = true;
       let alive = true;
+      let stopEarly: (() => void) | null = null;
 
       const start = contextSafe!(() => {
         if (!alive || !root.current) return;
@@ -45,6 +46,10 @@ export function Hero() {
         const dots = q<HTMLElement>(".hero-dot");
         const dotFills = q<HTMLElement>(".hero-dot-fill");
         const seams = q<HTMLElement>(".hero-seam");
+        const doors = q<HTMLElement>(".hero-door");
+        // the two lights travel from the centre to the edges (moved, not re-laid-out, so phones keep up)
+        const seamTo = (k: number, seam: HTMLElement) =>
+          (k === 0 ? -0.5 : 0.5) * (seam.parentElement?.clientWidth ?? 0);
         const imgOf = (i: number) => slides[i].querySelector("img");
 
         let current = 0;
@@ -123,12 +128,7 @@ export function Hero() {
               { clipPath: "inset(0% 0% 0% 0%)", duration: door, ease: "expo.inOut" },
               0,
             )
-              .fromTo(
-                seams,
-                { left: "50%", autoAlpha: 1 },
-                { left: (k: number) => (k === 0 ? "0%" : "100%"), duration: door, ease: "expo.inOut" },
-                0,
-              )
+              .fromTo(seams, { x: 0, autoAlpha: 1 }, { x: seamTo, duration: door, ease: "expo.inOut" }, 0)
               .to(seams, { autoAlpha: 0, duration: 0.35 }, door - 0.3)
               .to(imgOf(prev), { scale: 1.06, duration: door, ease: "expo.inOut" }, 0);
             startDrift(next, 1.25);
@@ -156,6 +156,7 @@ export function Hero() {
 
         if (reduce) {
           gsap.set(q("[data-reveal]"), { autoAlpha: 1 });
+          gsap.set(doors, { display: "none" });
           runProgress();
           return;
         }
@@ -171,18 +172,17 @@ export function Hero() {
         gsap
           .timeline({ defaults: { ease: "expo.out" } })
           .set(q(".hero-media"), { autoAlpha: 1 }, 0)
+          // the first photo opens from the centre: two dark doors slide apart (moving whole panels
+          // is light for phones, unlike reshaping the full-screen photo every frame)
+          .set(doors, { autoAlpha: 1 }, 0)
           .fromTo(
-            slides[0],
-            { clipPath: "inset(0% 50% 0% 50%)" },
-            { clipPath: "inset(0% 0% 0% 0%)", duration: 1.9, ease: "expo.inOut" },
+            doors,
+            { xPercent: 0 },
+            { xPercent: (k: number) => (k === 0 ? -100 : 100), duration: 1.9, ease: "expo.inOut" },
             0,
           )
-          .fromTo(
-            seams,
-            { left: "50%", autoAlpha: 1 },
-            { left: (k: number) => (k === 0 ? "0%" : "100%"), duration: 1.9, ease: "expo.inOut" },
-            0,
-          )
+          .set(doors, { display: "none" }, 1.9)
+          .fromTo(seams, { x: 0, autoAlpha: 1 }, { x: seamTo, duration: 1.9, ease: "expo.inOut" }, 0)
           .to(seams, { autoAlpha: 0, duration: 0.4 }, 1.55)
           .add(() => startDrift(0, 1.3), 0)
           // copy
@@ -203,138 +203,158 @@ export function Hero() {
           .fromTo(q(".hero-dots"), { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 0.9 }, 1.85)
           .add(runProgress, 2.4);
 
-        /* ── Scroll: hero holds still, the photo shrinks into an arch, the tagline appears beside it ── */
-        const el = root.current;
-        const wrap = track.current!;
-        const isDesktop = () => window.innerWidth >= 1024;
-        const measure = () => {
-          const width = el.clientWidth;
-          const height = el.clientHeight;
-          const view = Math.min(height, window.innerHeight);
-          const w = isDesktop() ? Math.min(width * 0.32, 460) : Math.min(width * 0.68, 340);
-          const h = Math.min(view * (isDesktop() ? 0.72 : 0.42), w * 1.42);
-          const left = (width - w) / 2;
-          const top = height - view + (view - h) / 2 + (isDesktop() ? 28 : 0);
-          gsap.set(el, {
-            "--arch-w": `${w}px`,
-            "--arch-h": `${h}px`,
-            "--arch-top": `${top}px`,
-            "--arch-left": `${left}px`,
-          });
-          return { w, h, top, left, right: width - left - w, bottom: height - top - h };
-        };
-        const archClip = () => {
-          const a = measure();
-          return `inset(${a.top}px ${a.right}px ${a.bottom}px ${a.left}px round ${a.w / 2}px ${a.w / 2}px 12px 12px)`;
-        };
+        /* ── Scroll: hero holds still, the photo shrinks into an arch, the tagline appears beside it ──
+           Set up once the intro has played, or as soon as the visitor starts scrolling: setting it up
+           re-measures the whole page, a long job that would make the intro stutter on phones. */
+        let scrollReady = false;
+        const setupScroll = contextSafe!(() => {
+          if (scrollReady || !alive || !root.current) return;
+          scrollReady = true;
+          stopEarly?.();
+          const el = root.current;
+          const wrap = track.current!;
+          const isDesktop = () => window.innerWidth >= 1024;
+          const measure = () => {
+            const width = el.clientWidth;
+            const height = el.clientHeight;
+            const view = Math.min(height, window.innerHeight);
+            const w = isDesktop() ? Math.min(width * 0.32, 460) : Math.min(width * 0.68, 340);
+            const h = Math.min(view * (isDesktop() ? 0.72 : 0.42), w * 1.42);
+            const left = (width - w) / 2;
+            const top = height - view + (view - h) / 2 + (isDesktop() ? 28 : 0);
+            gsap.set(el, {
+              "--arch-w": `${w}px`,
+              "--arch-h": `${h}px`,
+              "--arch-top": `${top}px`,
+              "--arch-left": `${left}px`,
+            });
+            return { w, h, top, left, right: width - left - w, bottom: height - top - h };
+          };
+          const archClip = () => {
+            const a = measure();
+            return `inset(${a.top}px ${a.right}px ${a.bottom}px ${a.left}px round ${a.w / 2}px ${a.w / 2}px 12px 12px)`;
+          };
 
-        gsap.set(q(".hero-media"), { clipPath: "inset(0px 0px 0px 0px round 0px 0px 0px 0px)" });
-        const shrink = gsap
-          .timeline({ paused: true, defaults: { ease: "none" } })
-          .to(q(".hero-copy"), { y: -80, autoAlpha: 0, duration: 0.3 }, 0)
-          .fromTo(q(".hero-dots"), { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.2, immediateRender: false }, 0)
-          .to(q(".hero-shade"), { autoAlpha: 0, duration: 0.45 }, 0.05)
-          .to(q(".hero-media"), { clipPath: archClip, duration: 0.7, ease: "power1.inOut" }, 0)
-          .to(q(".hero-slides"), { scale: 1.08, duration: 0.7, ease: "power1.inOut" }, 0)
-          .to(
-            [el, wrap],
-            {
-              backgroundColor: () =>
-                getComputedStyle(el).getPropertyValue("--color-cream").trim() || "#fff8ee",
-              duration: 0.4,
+          gsap.set(q(".hero-media"), { clipPath: "inset(0px 0px 0px 0px round 0px 0px 0px 0px)" });
+          const shrink = gsap
+            .timeline({ paused: true, defaults: { ease: "none" } })
+            .to(q(".hero-copy"), { y: -80, autoAlpha: 0, duration: 0.3 }, 0)
+            .fromTo(q(".hero-dots"), { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.2, immediateRender: false }, 0)
+            .to(q(".hero-shade"), { autoAlpha: 0, duration: 0.45 }, 0.05)
+            .to(q(".hero-media"), { clipPath: archClip, duration: 0.7, ease: "power1.inOut" }, 0)
+            .to(q(".hero-slides"), { scale: 1.08, duration: 0.7, ease: "power1.inOut" }, 0)
+            .to(
+              [el, wrap],
+              {
+                backgroundColor: () =>
+                  getComputedStyle(el).getPropertyValue("--color-cream").trim() || "#fff8ee",
+                duration: 0.4,
+              },
+              0.25,
+            )
+            .fromTo(
+              q(".hero-arch-line"),
+              { autoAlpha: 0, scale: 1.06 },
+              { autoAlpha: 1, scale: 1, duration: 0.35, ease: "power2.out" },
+              0.5,
+            )
+            .set(q(".hero-outro"), { autoAlpha: 1 }, 0.5)
+            .fromTo(
+              q(".hero-outro-a > *"),
+              { autoAlpha: 0, x: () => (isDesktop() ? -60 : 0), y: () => (isDesktop() ? 0 : -24) },
+              { autoAlpha: 1, x: 0, y: 0, duration: 0.3, stagger: 0.07, ease: "power2.out" },
+              0.55,
+            )
+            .fromTo(
+              q(".hero-outro-b > *"),
+              { autoAlpha: 0, x: () => (isDesktop() ? 60 : 0), y: () => (isDesktop() ? 0 : 24) },
+              { autoAlpha: 1, x: 0, y: 0, duration: 0.3, stagger: 0.07, ease: "power2.out" },
+              0.6,
+            );
+
+          // One scroll plays the whole change: the photo shrinks into the arch by itself (it never
+          // stops halfway) while the page glides to the end of the hold; scrolling back up into the
+          // hold plays it in reverse. Scrolling is paused during the glide so one flick can't skip it.
+          const GLIDE_SECONDS = 3;
+          const glideEase = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2); // power1.inOut
+          let inArch = false;
+          let gliding = false;
+          const glide = (toArch: boolean, self: ScrollTrigger) => {
+            inArch = toArch;
+            gsap.to(shrink, {
+              progress: toArch ? 1 : 0,
+              duration: GLIDE_SECONDS,
+              ease: "power1.inOut",
+              overwrite: true,
+            });
+            const lenis = lenisRef.current;
+            // a menu link is already taking the page somewhere, or the page jumped right past the
+            // hold (scrollbar drag, restored position): let it be, the change just plays along
+            const jumpedPast = toArch ? self.progress >= 1 : self.progress <= 0;
+            if (!lenis || lenis.userData.anchor || jumpedPast) return;
+            gliding = true;
+            gsap.delayedCall(GLIDE_SECONDS, () => (gliding = false));
+            lenis.scrollTo(toArch ? self.end : self.start, {
+              duration: GLIDE_SECONDS,
+              easing: glideEase,
+              lock: true,
+              force: true,
+            });
+          };
+          // The hero holds still with position: sticky inside its tall wrapper (not a fixed-position
+          // pin, which phones' sliding address bar can shift and leave a gap above). Phones where the
+          // hero is taller than the screen hold it once its bottom reaches the screen bottom.
+          const holdAt = () => Math.max(0, el.offsetHeight - window.innerHeight);
+          const HOLD = 2.5; // screens of scroll room the hero holds for (the page glides through it)
+          ScrollTrigger.create({
+            trigger: wrap,
+            start: () => `top+=${holdAt()} top`,
+            end: () => `+=${window.innerHeight * HOLD}`,
+            refreshPriority: 1,
+            // before measuring: where the hero sticks, and the scroll room the hold needs (a spacer
+            // under the hero inside the wrapper; sticky can't use the wrapper's padding)
+            onRefreshInit: () => {
+              el.style.top = `${-holdAt()}px`;
+              const room = wrap.querySelector<HTMLElement>(":scope > .hero-room");
+              if (room) room.style.height = `${window.innerHeight * HOLD}px`;
             },
-            0.25,
-          )
-          .fromTo(
-            q(".hero-arch-line"),
-            { autoAlpha: 0, scale: 1.06 },
-            { autoAlpha: 1, scale: 1, duration: 0.35, ease: "power2.out" },
-            0.5,
-          )
-          .set(q(".hero-outro"), { autoAlpha: 1 }, 0.5)
-          .fromTo(
-            q(".hero-outro-a > *"),
-            { autoAlpha: 0, x: () => (isDesktop() ? -60 : 0), y: () => (isDesktop() ? 0 : -24) },
-            { autoAlpha: 1, x: 0, y: 0, duration: 0.3, stagger: 0.07, ease: "power2.out" },
-            0.55,
-          )
-          .fromTo(
-            q(".hero-outro-b > *"),
-            { autoAlpha: 0, x: () => (isDesktop() ? 60 : 0), y: () => (isDesktop() ? 0 : 24) },
-            { autoAlpha: 1, x: 0, y: 0, duration: 0.3, stagger: 0.07, ease: "power2.out" },
-            0.6,
-          );
+            onUpdate: (self) => {
+              if (gliding) return;
+              if (!inArch && self.direction === 1 && self.progress > 0) glide(true, self);
+              else if (inArch && self.direction === -1 && self.progress < 1) glide(false, self);
+            },
+            // sizes changed: re-measure the arch from the start state, then show the photo or the
+            // finished arch. Untouched until the first scroll, so it never records the page mid-intro.
+            onRefresh: (self) => {
+              gsap.killTweensOf(shrink);
+              if (shrink.progress() > 0) shrink.progress(0);
+              shrink.invalidate();
+              if (!gliding) inArch = self.progress > 0;
+              if (inArch) shrink.progress(1);
+            },
+          });
 
-        // One scroll plays the whole change: the photo shrinks into the arch by itself (it never
-        // stops halfway) while the page glides to the end of the hold; scrolling back up into the
-        // hold plays it in reverse. Scrolling is paused during the glide so one flick can't skip it.
-        const GLIDE_SECONDS = 3;
-        const glideEase = (t: number) => (t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2); // power1.inOut
-        let inArch = false;
-        let gliding = false;
-        const glide = (toArch: boolean, self: ScrollTrigger) => {
-          inArch = toArch;
-          gsap.to(shrink, {
-            progress: toArch ? 1 : 0,
-            duration: GLIDE_SECONDS,
-            ease: "power1.inOut",
-            overwrite: true,
-          });
-          const lenis = lenisRef.current;
-          // a menu link is already taking the page somewhere, or the page jumped right past the
-          // hold (scrollbar drag, restored position): let it be, the change just plays along
-          const jumpedPast = toArch ? self.progress >= 1 : self.progress <= 0;
-          if (!lenis || lenis.userData.anchor || jumpedPast) return;
-          gliding = true;
-          gsap.delayedCall(GLIDE_SECONDS, () => (gliding = false));
-          lenis.scrollTo(toArch ? self.end : self.start, {
-            duration: GLIDE_SECONDS,
-            easing: glideEase,
-            lock: true,
-            force: true,
-          });
-        };
-        // The hero holds still with position: sticky inside its tall wrapper (not a fixed-position
-        // pin, which phones' sliding address bar can shift and leave a gap above). Phones where the
-        // hero is taller than the screen hold it once its bottom reaches the screen bottom.
-        const holdAt = () => Math.max(0, el.offsetHeight - window.innerHeight);
-        const HOLD = 2.5; // screens of scroll room the hero holds for (the page glides through it)
-        ScrollTrigger.create({
-          trigger: wrap,
-          start: () => `top+=${holdAt()} top`,
-          end: () => `+=${window.innerHeight * HOLD}`,
-          refreshPriority: 1,
-          // before measuring: where the hero sticks, and the scroll room the hold needs (a spacer
-          // under the hero inside the wrapper; sticky can't use the wrapper's padding)
-          onRefreshInit: () => {
-            el.style.top = `${-holdAt()}px`;
-            const room = wrap.querySelector<HTMLElement>(":scope > .hero-room");
-            if (room) room.style.height = `${window.innerHeight * HOLD}px`;
-          },
-          onUpdate: (self) => {
-            if (gliding) return;
-            if (!inArch && self.direction === 1 && self.progress > 0) glide(true, self);
-            else if (inArch && self.direction === -1 && self.progress < 1) glide(false, self);
-          },
-          // sizes changed: re-measure the arch from the start state, then show the photo or the
-          // finished arch. Untouched until the first scroll, so it never records the page mid-intro.
-          onRefresh: (self) => {
-            gsap.killTweensOf(shrink);
-            if (shrink.progress() > 0) shrink.progress(0);
-            shrink.invalidate();
-            if (!gliding) inArch = self.progress > 0;
-            if (inArch) shrink.progress(1);
-          },
+          // The hold adds scroll space, so re-measure sections further down that were set up before it
+          ScrollTrigger.sort();
+          ScrollTrigger.refresh();
         });
-
-        // The hold adds scroll space, so re-measure sections further down that were set up before it
-        ScrollTrigger.sort();
-        ScrollTrigger.refresh();
+        const early = () => setupScroll();
+        const inputs = ["wheel", "touchstart", "keydown", "scroll"] as const;
+        inputs.forEach((type) => window.addEventListener(type, early, { passive: true }));
+        stopEarly = () => inputs.forEach((type) => window.removeEventListener(type, early));
+        gsap.delayedCall(3, setupScroll);
       });
 
-      document.fonts.ready.then(start);
+      // Start once the fonts are in and the first photo is unpacked (decoded), so the doors open onto
+      // a ready picture instead of the phone freezing to unpack it mid-intro; never wait over 1.5s
+      const firstPhoto = root.current?.querySelector<HTMLImageElement>(".hero-slide img");
+      const decoded = firstPhoto ? firstPhoto.decode().catch(() => {}) : Promise.resolve();
+      document.fonts.ready
+        .then(() => Promise.race([decoded, new Promise((done) => setTimeout(done, 1500))]))
+        .then(start);
       return () => {
         alive = false;
+        stopEarly?.();
       };
     },
     { scope: root },
@@ -370,6 +390,14 @@ export function Hero() {
                   style={{ "--pos": slide.position, "--pos-m": slide.mobilePosition } as React.CSSProperties}
                 />
               </div>
+            ))}
+            {/* intro: two dark doors over the first photo that slide apart (hidden unless the intro runs) */}
+            {[0, 1].map((k) => (
+              <div
+                key={`door-${k}`}
+                aria-hidden
+                className={`hero-door invisible absolute inset-y-0 z-[4] w-[calc(50%+1px)] bg-night ${k === 0 ? "left-0" : "right-0"}`}
+              />
             ))}
             {[0, 1].map((k) => (
               <div
