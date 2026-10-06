@@ -76,8 +76,13 @@ export function Hero() {
         };
 
         // Photos after the first wait (display: none, so they don't download with the page);
-        // each one is woken while the photo before it plays
-        const wake = (i: number) => slides[i]?.removeAttribute("data-wait");
+        // each one is woken while the photo before it plays, and unpacked (decoded) in advance so
+        // the phone doesn't stop to do it the moment the photo starts to open
+        const wake = (i: number) => {
+          if (!slides[i]?.hasAttribute("data-wait")) return;
+          slides[i].removeAttribute("data-wait");
+          imgOf(i)?.decode().catch(() => {});
+        };
 
         const runProgress = () => {
           progress?.kill();
@@ -293,13 +298,21 @@ export function Hero() {
             const jumpedPast = toArch ? self.progress >= 1 : self.progress <= 0;
             if (!lenis || lenis.userData.anchor || jumpedPast) return;
             gliding = true;
+            const to = toArch ? self.end : self.start;
+            // Finger scrolling: hold the page still (which also stops the finger's leftover slide,
+            // that would fight a moving page), let the change play, then jump to its end. The hero
+            // is pinned all through the hold, so the jump can't be seen. Mouse wheels glide along.
+            if (window.matchMedia("(pointer: coarse)").matches) {
+              lenis.stop();
+              gsap.delayedCall(GLIDE_SECONDS, () => {
+                lenis.start();
+                lenis.scrollTo(to, { immediate: true, force: true });
+                gliding = false;
+              });
+              return;
+            }
             gsap.delayedCall(GLIDE_SECONDS, () => (gliding = false));
-            lenis.scrollTo(toArch ? self.end : self.start, {
-              duration: GLIDE_SECONDS,
-              easing: glideEase,
-              lock: true,
-              force: true,
-            });
+            lenis.scrollTo(to, { duration: GLIDE_SECONDS, easing: glideEase, lock: true, force: true });
           };
           // The hero holds still with position: sticky inside its tall wrapper (not a fixed-position
           // pin, which phones' sliding address bar can shift and leave a gap above). Phones where the
