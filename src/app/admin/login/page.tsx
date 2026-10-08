@@ -37,7 +37,7 @@ export default async function LoginPage() {
         className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgb(11_10_10/0.35)_10%,rgb(11_10_10/0.7)_80%)]"
       />
 
-      <div className="relative w-full max-w-[25.5rem]">
+      <div className="relative w-full max-w-102">
         {/* Mark */}
         <div className="mb-9 flex flex-col items-center">
           {logo.src ? (
@@ -64,7 +64,7 @@ export default async function LoginPage() {
           {/* a thread of gold across the top, brightest in the middle */}
           <div
             aria-hidden
-            className="h-px bg-gradient-to-r from-transparent via-brand/70 to-transparent"
+            className="h-px bg-linear-to-r from-transparent via-brand/70 to-transparent"
           />
 
           <div className="p-7 sm:p-8">
@@ -76,7 +76,7 @@ export default async function LoginPage() {
             </p>
 
             {/* LoginForm reads the ?next= param, which needs a boundary to prerender */}
-            <Suspense fallback={<div className="mt-6 h-[19rem]" />}>
+            <Suspense fallback={<div className="mt-6 h-76" />}>
               <LoginForm />
             </Suspense>
           </div>
