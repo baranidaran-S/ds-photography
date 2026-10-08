@@ -5,12 +5,13 @@ import { useEffect, useRef } from "react";
 import type Lenis from "lenis";
 import { useLenis } from "lenis/react";
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
-import { heroOutro, heroSlides } from "@/content/site";
-import { whatsappLink } from "@/lib/whatsapp";
+import type { HeroSlide } from "@/content/site";
+import { useEnquiry, useSite } from "@/components/providers/SiteProvider";
 import { useAnchorScroll } from "@/hooks/useAnchorScroll";
 import { Magnetic } from "@/components/ui/Magnetic";
 import { ArrowIcon, ChatIcon } from "@/components/ui/icons";
 import { LotusMark } from "@/components/ui/ornaments";
+import type { HeroCopy } from "@/content/db";
 
 const SLIDE_SECONDS = 6;
 const DOOR_SECONDS = 1.7; // how long a new photo takes to open
@@ -18,8 +19,25 @@ const DOOR_SECONDS = 1.7; // how long a new photo takes to open
 const PHONE_SLIDE_SECONDS = 3.5;
 const PHONE_DOOR_SECONDS = 1.1;
 
-export function Hero() {
+type HeroOutro = {
+  left: string;
+  right: string;
+  intro: string;
+  cta: { label: string; href: string };
+};
+
+export function Hero({
+  slides: heroSlides,
+  outro: heroOutro,
+  copy,
+}: {
+  slides: HeroSlide[];
+  outro: HeroOutro;
+  copy: HeroCopy;
+}) {
   const root = useRef<HTMLElement>(null);
+  const enquire = useEnquiry();
+  const { site } = useSite();
   // Tall wrapper the hero sticks inside while the photo shrinks into the arch
   const track = useRef<HTMLDivElement>(null);
   const goTo = useRef<(index: number) => void>(() => {});
@@ -458,7 +476,7 @@ export function Hero() {
             <span className="foil-deep">{heroOutro.right}</span>
           </p>
           <p className="font-heading text-[0.68rem] font-semibold tracking-[0.24em] text-ink/55 uppercase">
-            Weddings · Celebrations · Little ones
+            {copy.eyebrow}
           </p>
           <a
             href={heroOutro.cta.href}
@@ -484,41 +502,49 @@ export function Hero() {
               data-reveal
               className="hero-kicker mb-5 font-heading text-[0.68rem] font-semibold tracking-[0.24em] text-brand-light uppercase sm:text-[0.78rem] sm:tracking-[0.32em]"
             >
-              Weddings · Celebrations · Little ones
+              {copy.eyebrow}
             </p>
 
             <h1
               data-reveal
               className="hero-title font-display text-[clamp(2.4rem,4.6vw,4.8rem)] leading-[1.08] text-cream [text-shadow:0_2px_24px_rgb(14_12_11/0.35)]"
             >
-              {/* four stacked lines: Capturing the / colours / of every / celebration */}
-              <span className="hero-line block">Capturing the</span>
-              <span className="hero-line block">
-                <span className="hero-foil-mask -mb-[0.16em] inline-block overflow-hidden pb-[0.16em] align-bottom">
-                  <span className="hero-foil foil inline-block [text-shadow:none]">colours</span>
+              {/* one block per line, with the chosen one in gold foil */}
+              {copy.lines.map((line, i) => (
+                <span key={`${i}-${line}`} className="hero-line block">
+                  {i === copy.foilLine ? (
+                    <span className="hero-foil-mask -mb-[0.16em] inline-block overflow-hidden pb-[0.16em] align-bottom">
+                      <span className="hero-foil foil inline-block [text-shadow:none]">
+                        {line}
+                      </span>
+                    </span>
+                  ) : (
+                    line
+                  )}
                 </span>
-              </span>
-              <span className="hero-line block">of every</span>
-              <span className="hero-line block">celebration</span>
+              ))}
             </h1>
 
             <p
               data-reveal
               className="hero-sub mt-6 max-w-[48ch] text-[0.98rem] leading-[1.85] font-light text-cream/85 sm:text-[1.05rem]"
             >
-              From wedding rituals and baby showers to first birthdays, we capture your family&apos;s most
-              precious moments with love and tradition.
+              {copy.sub}
             </p>
 
             <div data-reveal className="hero-cta mt-9 flex flex-wrap items-center gap-4">
               <Magnetic>
-                <a href={whatsappLink()} target="_blank" rel="noopener noreferrer" className="btn-brand">
+                <button
+                  type="button"
+                  onClick={() => enquire({ source: "hero" })}
+                  className="btn-brand"
+                >
                   <ChatIcon className="size-[1.15rem]" />
-                  Book on WhatsApp
-                </a>
+                  {site.bookLabel}
+                </button>
               </Magnetic>
               <a href="#portfolio" onClick={(e) => scrollTo(e)} className="btn-ghost group">
-                View portfolio
+                {copy.portfolioLabel}
                 <ArrowIcon className="size-4 transition-transform duration-500 ease-luxe group-hover:translate-x-1" />
               </a>
             </div>

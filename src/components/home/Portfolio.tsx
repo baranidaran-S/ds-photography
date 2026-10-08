@@ -5,31 +5,32 @@ import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type Lenis from "lenis";
 import { useLenis } from "lenis/react";
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
-import { stories, type Story } from "@/content/site";
-import { photos } from "@/content/photos";
-import { whatsappLink } from "@/lib/whatsapp";
+import type { Story } from "@/content/site";
+import type { Photo } from "@/content/photos";
+import { useEnquiry, useSite } from "@/components/providers/SiteProvider";
 import { ArrowIcon, ChatIcon } from "@/components/ui/icons";
 import { LotusMark } from "@/components/ui/ornaments";
 
 const pad = (n: number) => String(n).padStart(2, "0");
-const total = stories.length;
 
-// Optional photo of a real cover (photos.ts → albumCover). The board edges use it as a texture too.
-const cover = photos.albumCover;
-const coverTexture = cover.src
-  ? getImageProps({
-      src: cover.src,
-      alt: "",
-      // a texture for the board edges: about 1200px is plenty (it is softened by the leather shading)
-      width: 600,
-      height: 600,
-      quality: 75,
-    }).props.src
-  : null;
-// Spreads: 0 = closed cover, 1..total = one story each, total + 1 = "your story next"
-const TURNS = total + 1;
-// Scroll steps while pinned: one per turn, plus half a step so the last spread stays a moment
-const STEPS = TURNS + 0.5;
+export type AlbumCover = Photo & { showTitle?: boolean };
+
+/** Every word in this section, from the SEO-free admin copy (Portfolio Stories). */
+export type PortfolioCopy = {
+  eyebrow: string;
+  title: string;
+  titleFoil: string;
+  intro: string;
+  albumBrand: string;
+  albumTitle: string;
+  albumVolume: string;
+  endEyebrow: string;
+  endTitle: string;
+  endText: string;
+  reservedLabel: string;
+  reservedTitle: string;
+};
+
 // A turning paper page is drawn as this many narrow strips hinged together, so it can bend
 const CURL_STRIPS = 8;
 
@@ -42,7 +43,8 @@ const subscribeMotion = (onChange: () => void) => {
 };
 const motionAllowed = () => !window.matchMedia(REDUCE).matches;
 
-const spreadLabel = (k: number) => {
+const spreadLabel = (k: number, stories: Story[]) => {
+  const total = stories.length;
   if (k === 0)
     return { index: "Our albums", title: "Scroll to turn the pages" };
   if (k > total)
@@ -175,7 +177,7 @@ function Curl({ front, back }: SideProps) {
   );
 }
 
-function CoverArt() {
+function CoverArt({ cover, copy }: { cover: AlbumCover; copy: PortfolioCopy }) {
   return (
     <div className="absolute inset-0 grid place-items-center overflow-hidden rounded-[7px] text-center">
       {cover.src && (
@@ -206,17 +208,17 @@ function CoverArt() {
           <div className="pf-stamp relative flex flex-col items-center px-[8cqmin]">
             <LotusMark className="h-[8cqmin] w-[11cqmin] text-brand" />
             <p className="mt-[3.5cqmin] font-heading text-[clamp(0.5rem,2.6cqmin,0.8rem)] font-semibold tracking-[0.42em] text-brand-light/80 uppercase">
-              DS Photography
+              {copy.albumBrand}
             </p>
             <p className="foil mt-[2.5cqmin] font-display text-[13cqmin] leading-[1.1]">
-              Our Stories
+              {copy.albumTitle}
             </p>
             <span
               aria-hidden
               className="mt-[3.5cqmin] h-px w-[16cqmin] bg-brand/60"
             />
             <p className="mt-[3cqmin] font-heading text-[clamp(0.5rem,2.3cqmin,0.72rem)] tracking-[0.36em] text-brand-light/65 uppercase">
-              Volume I
+              {copy.albumVolume}
             </p>
           </div>
         </>
@@ -226,34 +228,42 @@ function CoverArt() {
 }
 
 /** Last spread, left page: the invitation */
-function EndPage() {
+function EndPage({
+  enquire,
+  copy,
+  book,
+}: {
+  enquire: (i: { source: string }) => void;
+  copy: PortfolioCopy;
+  /** the site-wide booking label, so all four buttons read the same */
+  book: string;
+}) {
   return (
     <div className="pf-paper flex flex-col items-center justify-center p-[7cqmin] text-center">
       <LotusMark className="h-[6cqmin] w-[9cqmin] text-accent" />
       <p className="mt-[3cqmin] font-heading text-[clamp(0.55rem,2.4cqmin,0.72rem)] font-semibold tracking-[0.3em] text-accent-deep uppercase">
-        Your celebration
+        {copy.endEyebrow}
       </p>
       <h3 className="mt-[2.5cqmin] font-display text-[clamp(1.4rem,8.5cqmin,2.9rem)] leading-[1.08] text-balance text-ink">
-        Your story could be the next page
+        {copy.endTitle}
       </h3>
       <p className="mt-[3cqmin] hidden max-w-[30ch] text-[clamp(0.75rem,3cqw,0.98rem)] leading-[1.75] text-ink/70 @[22rem]:block">
-        Tell us about your day and we&apos;ll keep a page ready for you.
+        {copy.endText}
       </p>
-      <a
-        href={whatsappLink()}
-        target="_blank"
-        rel="noopener noreferrer"
+      <button
+        type="button"
+        onClick={() => enquire({ source: "portfolio" })}
         className="btn-brand btn-sm mt-[5cqmin]"
       >
         <ChatIcon className="size-4" />
-        Book on WhatsApp
-      </a>
+        {book}
+      </button>
     </div>
   );
 }
 
 /** Last spread, right page: an empty print slot waiting for a photo */
-function ReservedPage() {
+function ReservedPage({ copy }: { copy: PortfolioCopy }) {
   return (
     <div className="pf-paper grid place-items-center p-[9cqmin]">
       <div className="relative grid size-full place-items-center border border-dashed border-ink/20 bg-ink/[0.025]">
@@ -263,10 +273,10 @@ function ReservedPage() {
         <span aria-hidden className="pf-corner bottom-0 left-0 -rotate-90" />
         <div className="px-[6cqmin] text-center">
           <p className="font-heading text-[clamp(0.5rem,2.3cqmin,0.7rem)] tracking-[0.3em] text-ink/45 uppercase">
-            Reserved for
+            {copy.reservedLabel}
           </p>
           <p className="mt-[2cqmin] font-display text-[clamp(1.2rem,7cqmin,2.4rem)] leading-[1.1] text-ink/60">
-            your memories
+            {copy.reservedTitle}
           </p>
         </div>
       </div>
@@ -274,8 +284,33 @@ function ReservedPage() {
   );
 }
 
-export function Portfolio() {
+export function Portfolio({
+  stories,
+  albumCover: cover,
+  copy,
+}: {
+  stories: Story[];
+  albumCover: AlbumCover;
+  copy: PortfolioCopy;
+}) {
   const root = useRef<HTMLElement>(null);
+  const enquire = useEnquiry();
+  const { site } = useSite();
+  const total = stories.length;
+  // Spreads: 0 = closed cover, 1..total = one story each, total + 1 = "your story next"
+  const TURNS = total + 1;
+  // Scroll steps while pinned: one per turn, plus half a step so the last spread stays a moment
+  const STEPS = TURNS + 0.5;
+  const coverTexture = cover.src
+    ? getImageProps({
+        src: cover.src,
+        alt: "",
+        // a texture for the board edges: about 1200px is plenty (it is softened by the leather shading)
+        width: 600,
+        height: 600,
+        quality: 75,
+      }).props.src
+    : null;
   const nav = useRef<(step: number) => void>(() => {});
   const lenisRef = useRef<Lenis | undefined>(undefined);
   const lenis = useLenis();
@@ -558,7 +593,7 @@ export function Portfolio() {
             const open = [face(k - 1, "back"), face(k, "front")];
             faces.forEach((f) => (f.inert = !open.includes(f)));
 
-            const label = spreadLabel(k);
+            const label = spreadLabel(k, stories);
             ui.index.textContent = label.index;
             ui.title.textContent = label.title;
             ui.prev.disabled = k === 0;
@@ -645,14 +680,19 @@ export function Portfolio() {
 
   // Leaf i: front = right page of spread i, back = left page of spread i + 1
   const leaves: { front: React.ReactNode; back?: React.ReactNode }[] = [
-    { front: <CoverArt />, back: leftPage(0) },
+    { front: <CoverArt cover={cover} copy={copy} />, back: leftPage(0) },
     ...stories.map((_, s) => ({
       front: rightPage(s),
-      back: s + 1 < total ? leftPage(s + 1) : <EndPage />,
+      back:
+        s + 1 < total ? (
+          leftPage(s + 1)
+        ) : (
+          <EndPage enquire={enquire} copy={copy} book={site.bookLabel} />
+        ),
     })),
-    { front: <ReservedPage /> },
+    { front: <ReservedPage copy={copy} /> },
   ];
-  const intro = spreadLabel(0);
+  const intro = spreadLabel(0, stories);
 
   return (
     <section
@@ -666,21 +706,22 @@ export function Portfolio() {
         <div>
           <p className="pf-eyebrow mb-5 flex items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-accent-deep uppercase">
             <LotusMark className="h-4 w-6 text-accent" />
-            Recent stories
+            {copy.eyebrow}
           </p>
           <h2
             id="portfolio-title"
             className="pf-title font-display text-[clamp(2.4rem,5vw,4.6rem)] leading-[1.06]"
           >
-            Pages from our{" "}
+            {copy.title}{" "}
             <span className="pf-foil-mask -mb-[0.12em] inline-block overflow-hidden pb-[0.12em] align-bottom">
-              <span className="pf-foil foil-deep inline-block">albums</span>
+              <span className="pf-foil foil-deep inline-block">
+                {copy.titleFoil}
+              </span>
             </span>
           </h2>
         </div>
         <p className="pf-intro max-w-[44ch] text-[1rem] leading-[1.8] text-ink/65 lg:justify-self-end">
-          A few of the families who let us into their celebrations. Keep
-          scrolling to turn the pages.
+          {copy.intro}
         </p>
       </div>
 

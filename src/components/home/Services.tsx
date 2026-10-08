@@ -3,17 +3,14 @@
 import Image from "next/image";
 import { useId, useRef } from "react";
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
-import { serviceDetails } from "@/content/site";
-import { whatsappLink } from "@/lib/whatsapp";
+import type { Service } from "@/content/site";
+import { useEnquiry } from "@/components/providers/SiteProvider";
 import { ChatIcon } from "@/components/ui/icons";
 import { LotusMark } from "@/components/ui/ornaments";
+import type { SectionHeading } from "@/content/db";
 
 const SHOT_SECONDS = 3.5;
 const pad = (n: number) => String(n).padStart(2, "0");
-const total = serviceDetails.length;
-
-const enquiry = (name: string) =>
-  whatsappLink(`Hi DS Photography! I'd like to know more about ${name.toLowerCase()} photography.`);
 
 // Aperture opening: an octagon cut out of a black plate. Scaling it to 0 closes the iris.
 const R = 150;
@@ -36,8 +33,16 @@ const cornerClasses = [
   "bottom-4 right-4 border-b border-r sm:bottom-6 sm:right-6",
 ];
 
-export function Services() {
+export function Services({
+  services: serviceDetails,
+  meta,
+}: {
+  services: Service[];
+  meta: SectionHeading;
+}) {
   const root = useRef<HTMLElement>(null);
+  const total = serviceDetails.length;
+  const enquire = useEnquiry();
   const goTo = useRef<(index: number) => void>(() => {});
   const maskId = `vf-iris-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
 
@@ -305,21 +310,22 @@ export function Services() {
           <div>
             <p className="svc-eyebrow mb-5 flex items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-brand-light uppercase">
               <LotusMark className="h-4 w-6 text-accent" />
-              What we capture
+              {meta.eyebrow}
             </p>
             <h2
               id="services-title"
               className="svc-title font-display text-[clamp(2.4rem,5vw,4.6rem)] leading-[1.06]"
             >
-              Every ritual, every{" "}
+              {meta.title}{" "}
               <span className="svc-foil-mask -mb-[0.12em] inline-block overflow-hidden pb-[0.12em] align-bottom">
-                <span className="svc-foil foil inline-block">milestone</span>
+                <span className="svc-foil foil inline-block">
+                  {meta.titleFoil}
+                </span>
               </span>
             </h2>
           </div>
           <p className="svc-intro max-w-[44ch] text-[1rem] leading-[1.8] text-cream/65 lg:justify-self-end">
-            Seven kinds of shoots, one way of seeing. Tap a frame below, or let the camera take you through
-            each one.
+            {meta.intro}
           </p>
         </div>
 
@@ -438,17 +444,18 @@ export function Services() {
               </div>
               <div className="mt-5 grid justify-items-start">
                 {serviceDetails.map((s, i) => (
-                  <a
+                  <button
                     key={s.name}
-                    href={enquiry(s.name)}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                    type="button"
+                    onClick={() =>
+                      enquire({ source: `services:${s.name}`, eventType: s.name })
+                    }
                     className={`vf-cta btn-brand btn-sm [grid-area:1/1] ${i ? "invisible" : ""}`}
-                    aria-label={`Enquire about ${s.name} on WhatsApp`}
+                    aria-label={`Enquire about ${s.name}`}
                   >
                     <ChatIcon className="size-4" />
                     Enquire
-                  </a>
+                  </button>
                 ))}
               </div>
             </div>

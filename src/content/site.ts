@@ -7,6 +7,11 @@ export const site = {
   // TODO: replace with the client's WhatsApp number — country code + number, digits only (e.g. 919876543210)
   whatsappNumber: "919994824771",
   whatsappMessage: "Hi DS Photography! I'd like to book a photoshoot.",
+  /** One label behind every booking button on the site. */
+  bookLabel: "Book on WhatsApp",
+  enquiryTitle: "Tell us about your celebration",
+  enquiryIntro:
+    "A few details and we'll come back to you, usually within a few hours.",
 };
 
 // Menu links in page order. On computers the first half sits left of the logo, the rest on the right.
@@ -98,8 +103,9 @@ export const films = {
   titleFoil: "motion",
   intro:
     "The walk in, the vows, the music and the small pauses before everyone cheers, edited to feel just like the day itself.",
-  // TODO: the studio's YouTube channel link, for the "Watch more on YouTube" button
+  // TODO: the studio's YouTube channel link, for the button under the films
   channelUrl: "https://www.youtube.com/@maduraiweddingphotography/videos",
+  channelLabel: "Watch more on YouTube",
   list: [
     {
       title: "Aravindh  & Thenmozhi ",

@@ -3,20 +3,10 @@
 import Image from "next/image";
 import { useRef } from "react";
 import { gsap, SplitText, useGSAP } from "@/lib/gsap";
-import {
-  contact,
-  films,
-  footer,
-  instagram,
-  navLinks,
-  site,
-} from "@/content/site";
-import { photos } from "@/content/photos";
-import { whatsappLink } from "@/lib/whatsapp";
+import { navLinks } from "@/content/site";
+import { useSite, useWhatsapp } from "@/components/providers/SiteProvider";
 import { useAnchorScroll } from "@/hooks/useAnchorScroll";
 import { ArrowIcon, ChatIcon } from "@/components/ui/icons";
-
-const telHref = `tel:+${contact.phone.replace(/\D/g, "")}`;
 
 type IconProps = { className?: string };
 const stroke = {
@@ -68,12 +58,6 @@ function PinIcon({ className = "size-[1.1rem]" }: IconProps) {
   );
 }
 
-const socials = [
-  { label: "Instagram", href: instagram.url, Icon: InstagramIcon },
-  { label: "YouTube", href: films.channelUrl, Icon: YouTubeIcon },
-  { label: "WhatsApp", href: whatsappLink(), Icon: ChatIcon },
-];
-
 const heading =
   "mb-6 font-heading text-[0.68rem] font-semibold tracking-[0.28em] text-brand-light/80 uppercase";
 const link =
@@ -82,6 +66,15 @@ const link =
 export function Footer() {
   const root = useRef<HTMLElement>(null);
   const scrollTo = useAnchorScroll();
+  const book = useWhatsapp();
+  const { site, logo, instagram, films, footer, contact } = useSite();
+
+  const telHref = `tel:+${contact.phone.replace(/\D/g, "")}`;
+  const socials = [
+    { label: "Instagram", href: instagram.url, Icon: InstagramIcon },
+    { label: "YouTube", href: films.channelUrl, Icon: YouTubeIcon },
+    { label: "WhatsApp", href: book(), Icon: ChatIcon },
+  ];
 
   useGSAP(
     () => {
@@ -131,8 +124,8 @@ export function Footer() {
             className="flex flex-col items-center"
           >
             <Image
-              src={photos.logo.full}
-              alt={photos.logo.alt}
+              src={logo.full}
+              alt={logo.alt}
               width={828}
               height={706}
               sizes="120px"

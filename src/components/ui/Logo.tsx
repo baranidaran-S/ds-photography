@@ -1,6 +1,8 @@
+"use client";
+
 import Image from "next/image";
-import { photos } from "@/content/photos";
 import { LotusMark } from "@/components/ui/ornaments";
+import { useSite } from "@/components/providers/SiteProvider";
 
 /** The word under the mark; it tucks away when the menu bar turns compact (see .site-logo-word in globals.css) */
 function Word() {
@@ -15,10 +17,10 @@ function Word() {
   );
 }
 
-/** Centred, stacked logo: the client's mark (photos.ts → logo) with PHOTOGRAPHY underneath.
+/** Centred, stacked logo: the mark set in System Settings with PHOTOGRAPHY underneath.
     Until a logo file is set, a text logo: lotus + DS. */
 export function Logo({ className = "" }: { className?: string }) {
-  const { logo } = photos;
+  const { logo } = useSite();
 
   if (logo.src) {
     return (

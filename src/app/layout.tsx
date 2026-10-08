@@ -2,10 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { DM_Mono, Lato, Mrs_Saint_Delafield, Playfair_Display } from "next/font/google";
 import "lenis/dist/lenis.css";
 import "./globals.css";
-import { SmoothScroll } from "@/components/providers/SmoothScroll";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { FloatingContact } from "@/components/layout/FloatingContact";
 
 // Playfair Display for headings and the menu; Lato for text, labels and buttons
 const display = Playfair_Display({
@@ -45,15 +41,8 @@ export const viewport: Viewport = {
   themeColor: "#0b0a0a",
 };
 
-// Runs before first paint:
-// - every visit and refresh starts at the top so the intro plays: the browser doesn't restore the
-//   old scroll position, and a "#section" in the address is dropped instead of jumped to
-//   (the scroll animations are built to start from the top)
-// - lets CSS hide [data-reveal] elements until GSAP animates them in, and shows everything again
-//   if the intro hasn't started within 4s
-const revealScript =
-  "if('scrollRestoration' in history)history.scrollRestoration='manual';if(location.hash)history.replaceState(null,'',location.pathname+location.search);document.documentElement.classList.add('js');setTimeout(function(){if(!window.__dsReady)document.documentElement.classList.remove('js')},4000);";
-
+/* The site chrome (smooth scroll, menu, footer) lives in app/(site)/layout.tsx so
+   the admin at /admin can render without it. This layout only sets up the document. */
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
@@ -61,21 +50,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={`${display.variable} ${body.variable} ${mono.variable} ${signature.variable} antialiased`}
     >
-      <head>
-        <script
-          type={typeof window === "undefined" ? "text/javascript" : "text/plain"}
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: revealScript }}
-        />
-      </head>
-      <body className="bg-cream font-body text-ink">
-        <SmoothScroll>
-          <Navbar />
-          {children}
-          <Footer />
-          <FloatingContact />
-        </SmoothScroll>
-      </body>
+      <body className="bg-cream font-body text-ink">{children}</body>
     </html>
   );
 }

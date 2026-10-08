@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRef, useState } from "react";
 import { useLenis } from "lenis/react";
 import { gsap, SplitText, useGSAP } from "@/lib/gsap";
-import { films, type Film } from "@/content/site";
+import type { Film } from "@/content/site";
 import { ArrowIcon } from "@/components/ui/icons";
 import { LotusMark } from "@/components/ui/ornaments";
 
@@ -132,7 +132,17 @@ function FilmCard({
   );
 }
 
-export function Films() {
+type FilmsBlock = {
+  eyebrow: string;
+  title: string;
+  titleFoil: string;
+  intro: string;
+  channelUrl: string;
+  channelLabel: string;
+  list: Film[];
+};
+
+export function Films({ films }: { films: FilmsBlock }) {
   const root = useRef<HTMLElement>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const [active, setActive] = useState<number | null>(null);
@@ -398,7 +408,7 @@ export function Films() {
             rel="noopener noreferrer"
             className="group btn-ghost"
           >
-            Watch more on YouTube
+            {films.channelLabel}
             <ArrowIcon className="size-4 transition-transform duration-500 ease-luxe group-hover:translate-x-1" />
           </a>
         </div>
