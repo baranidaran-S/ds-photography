@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useLenis } from "lenis/react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
-import { navLinks, services } from "@/content/site";
-import { whatsappLink } from "@/lib/whatsapp";
+import { navLinks } from "@/content/site";
+import { useEnquiry, useSite } from "@/components/providers/SiteProvider";
 import { useAnchorScroll } from "@/hooks/useAnchorScroll";
 import { Logo } from "@/components/ui/Logo";
 import { Mandala } from "@/components/ui/ornaments";
@@ -55,6 +55,8 @@ export function Navbar() {
   const scrollTo = useAnchorScroll();
 
   const lenis = useLenis();
+  const enquire = useEnquiry();
+  const { services, site } = useSite();
 
   // Entrance: bar drops in with the hero intro
   useGSAP(
@@ -162,7 +164,6 @@ export function Navbar() {
     };
   }, [open]);
 
-  const book = whatsappLink();
 
   return (
     <>
@@ -265,15 +266,17 @@ export function Navbar() {
           </nav>
 
           <div className="menu-foot space-y-5 border-t border-brand/30 pt-6">
-            <a
-              href={book}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                enquire({ source: "menu" });
+              }}
               className="inline-flex items-center gap-3 font-heading text-sm font-semibold tracking-[0.14em] text-brand-light uppercase"
             >
               <ChatIcon className="size-5" />
-              Book on WhatsApp
-            </a>
+              {site.bookLabel}
+            </button>
             <p className="font-heading text-[0.68rem] leading-relaxed tracking-[0.2em] text-cream/60 uppercase">
               {services.join(" · ")}
             </p>

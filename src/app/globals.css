@@ -762,3 +762,62 @@
     background-position: 0% 0;
   }
 }
+
+/* Admin toasts and the confirm dialog (components/Feedback.tsx) */
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Admin sign-in: the form sits on a photograph, so its fields are dark. Chrome
+   paints its own near-white over anything it autofills, which turned them into
+   light boxes on a dark card and hid the show-password button behind them.
+   There is no colour property for that state — the inset shadow is the only
+   way to repaint it, and the long transition stops Chrome fading its own
+   colour back in. */
+.on-dark input:-webkit-autofill,
+.on-dark input:-webkit-autofill:hover,
+.on-dark input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-cream);
+  -webkit-box-shadow: 0 0 0 1000px rgb(11 10 10 / 0.72) inset;
+  caret-color: var(--color-cream);
+  transition: background-color 100000s ease-in-out 0s;
+}
+
+/* The gold ring that spreads from where the sign-in button was pressed */
+@keyframes ripple {
+  from {
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.5;
+  }
+  to {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0;
+  }
+}

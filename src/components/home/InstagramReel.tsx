@@ -3,18 +3,19 @@
 import Image from "next/image";
 import { useRef } from "react";
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
-import { instagram } from "@/content/site";
-import { photos } from "@/content/photos";
+import type { Photo } from "@/content/photos";
 import { Magnetic } from "@/components/ui/Magnetic";
 import { ArrowIcon } from "@/components/ui/icons";
 import { LotusMark } from "@/components/ui/ornaments";
+import type { SectionHeading } from "@/content/db";
 
 // Each row repeats its photos this many times so the loop never shows a gap, even on wide screens
 const COPIES = 4;
-const half = Math.ceil(photos.instagram.length / 2);
-const rows = [photos.instagram.slice(0, half), photos.instagram.slice(half)];
 // Seconds for one set of photos to pass by
 const LOOP_SECONDS = 42;
+
+export type InstagramTile = Photo & { likes?: string };
+type InstagramMeta = { handle: string; url: string };
 
 function InstagramGlyph({ className = "size-5" }: { className?: string }) {
   return (
@@ -36,9 +37,11 @@ function InstagramGlyph({ className = "size-5" }: { className?: string }) {
 function Tile({
   photo,
   copy,
+  instagram,
 }: {
-  photo: (typeof photos.instagram)[number];
+  photo: InstagramTile;
   copy: number;
+  instagram: InstagramMeta;
 }) {
   // only the first copy of each photo is reachable by keyboard / screen readers
   const hidden = copy > 0;
@@ -70,8 +73,18 @@ function Tile({
   );
 }
 
-export function InstagramReel() {
+export function InstagramReel({
+  photos,
+  instagram,
+  meta,
+}: {
+  photos: InstagramTile[];
+  instagram: InstagramMeta;
+  meta: SectionHeading;
+}) {
   const root = useRef<HTMLElement>(null);
+  const half = Math.ceil(photos.length / 2);
+  const rows = [photos.slice(0, half), photos.slice(half)];
 
   useGSAP(
     () => {
@@ -167,15 +180,15 @@ export function InstagramReel() {
       <div className="mx-auto max-w-[1320px] px-5 text-center sm:px-8">
         <p className="ig-eyebrow mb-5 flex items-center justify-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-brand-light uppercase">
           <LotusMark className="h-4 w-6 text-accent" />
-          On Instagram
+          {meta.eyebrow}
         </p>
         <h2
           id="instagram-title"
           className="ig-title font-display text-[clamp(2.2rem,4.4vw,4rem)] leading-[1.06]"
         >
-          Fresh from our latest{" "}
+          {meta.title}{" "}
           <span className="ig-foil-mask -mb-[0.12em] inline-block overflow-hidden pb-[0.12em] align-bottom">
-            <span className="ig-foil foil inline-block">shoots</span>
+            <span className="ig-foil foil inline-block">{meta.titleFoil}</span>
           </span>
         </h2>
       </div>
@@ -192,6 +205,7 @@ export function InstagramReel() {
                       key={`${copy}-${photo.src}`}
                       photo={photo}
                       copy={copy}
+                      instagram={instagram}
                     />
                   )),
                 )}

@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { useRef } from "react";
 import { gsap, SplitText, useGSAP } from "@/lib/gsap";
-import { about } from "@/content/site";
 import { LotusMark } from "@/components/ui/ornaments";
+import type { SectionHeading } from "@/content/db";
 
 // The portrait is shown through a staggered grid of tiles: [x, y, width, height] in % of the frame.
 // One continuous photo runs behind all of them, so the gaps slice it like a broken grid.
@@ -27,7 +27,22 @@ const tileDir = TILES.map(([x, y, w, h]) => ({
   y: (y + h / 2 - 50) / 50,
 }));
 
-export function About() {
+type AboutContent = {
+  name: string;
+  firstName: string;
+  role: string;
+  story: string[];
+  stats: { value: number; suffix: string; label: string }[];
+  photo: { src: string; alt: string; position?: string };
+};
+
+export function About({
+  about,
+  meta,
+}: {
+  about: AboutContent;
+  meta: SectionHeading;
+}) {
   const root = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -236,15 +251,15 @@ export function About() {
         <div className="ab-story lg:pl-4">
           <p className="ab-eyebrow mb-5 flex items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-brand-light uppercase">
             <LotusMark className="h-4 w-6 text-accent" />
-            Our story
+            {meta.eyebrow}
           </p>
           <h2
             id="about-title"
             className="ab-title font-display text-[clamp(2.4rem,5vw,4.4rem)] leading-[1.06]"
           >
-            The eyes behind{" "}
+            {meta.title}{" "}
             <span className="ab-foil-mask -mb-[0.12em] inline-block overflow-hidden pb-[0.12em] align-bottom">
-              <span className="ab-foil foil inline-block">every frame</span>
+              <span className="ab-foil foil inline-block">{meta.titleFoil}</span>
             </span>
           </h2>
 

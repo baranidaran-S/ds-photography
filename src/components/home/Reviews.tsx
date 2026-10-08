@@ -3,8 +3,9 @@
 import Image from "next/image";
 import { useRef } from "react";
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
-import { reviews, type ChatMessage, type Review } from "@/content/site";
+import type { ChatMessage, Review } from "@/content/site";
 import { LotusMark } from "@/components/ui/ornaments";
+import type { SectionHeading } from "@/content/db";
 
 // Each screenshot sits at a slight angle, like prints laid on a table; hovering straightens it
 const TILTS = [
@@ -237,7 +238,13 @@ function ChatShot({ review }: { review: Review }) {
   );
 }
 
-export function Reviews() {
+export function Reviews({
+  reviews,
+  meta,
+}: {
+  reviews: Review[];
+  meta: SectionHeading;
+}) {
   const root = useRef<HTMLElement>(null);
 
   useGSAP(
@@ -329,21 +336,22 @@ export function Reviews() {
         <div>
           <p className="rv-eyebrow mb-5 flex items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-accent-deep uppercase">
             <LotusMark className="h-4 w-6 text-accent" />
-            Kind words
+            {meta.eyebrow}
           </p>
           <h2
             id="reviews-title"
             className="rv-title font-display text-[clamp(2.4rem,5vw,4.6rem)] leading-[1.06]"
           >
-            Messages we{" "}
+            {meta.title}{" "}
             <span className="rv-foil-mask -mb-[0.12em] inline-block overflow-hidden pb-[0.12em] align-bottom">
-              <span className="rv-foil foil-deep inline-block">treasure</span>
+              <span className="rv-foil foil-deep inline-block">
+                {meta.titleFoil}
+              </span>
             </span>
           </h2>
         </div>
         <p className="rv-intro max-w-[44ch] text-[1rem] leading-[1.8] text-ink/65 lg:justify-self-end">
-          A few of the notes families sent us after their photos arrived. We
-          read every one, usually more than once.
+          {meta.intro}
         </p>
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
+import type Lenis from "lenis";
 import { useLenis } from "lenis/react";
 
 const NAV_HEIGHT = 72;
@@ -21,6 +22,34 @@ function scrollTopFor(section: HTMLElement, bar: number) {
   return top - bar - (spare > 0 ? Math.min(spare / 2, 32) : 8);
 }
 
+/** The scroll itself, so it can be made from a click or on arriving at the page. */
+export function jumpTo(href: string, lenis?: Lenis) {
+  if (!href.startsWith("#")) return;
+  const section =
+    href === "#home" ? null : document.querySelector<HTMLElement>(href);
+  if (href !== "#home" && !section) return;
+
+  // the menu bar hides while the page scrolls down and comes back while it scrolls up
+  let top = section ? scrollTopFor(section, 0) : 0;
+  if (section && top < window.scrollY) {
+    const bar =
+      document.querySelector<HTMLElement>(".site-header")?.offsetHeight ??
+      NAV_HEIGHT;
+    top = scrollTopFor(section, bar);
+  }
+  top = Math.max(0, top);
+
+  if (lenis) {
+    lenis.start();
+    // tagged so the hero lets this scroll pass instead of stopping on its arch
+    lenis.scrollTo(top, { duration: 1.4, userData: { anchor: true } });
+  } else {
+    window.scrollTo({ top, behavior: "smooth" });
+  }
+  // show the section in the address; a refresh still starts back at the top (layout.tsx)
+  history.replaceState(null, "", href);
+}
+
 /** Smooth-scrolls in-page "#section" links through Lenis; leaves other links alone. */
 export function useAnchorScroll() {
   const lenis = useLenis();
@@ -29,28 +58,9 @@ export function useAnchorScroll() {
     (event: React.MouseEvent<HTMLAnchorElement>, onDone?: () => void) => {
       const href = event.currentTarget.getAttribute("href");
       if (!href?.startsWith("#")) return;
-
-      const section = href === "#home" ? null : document.querySelector<HTMLElement>(href);
       event.preventDefault();
       onDone?.();
-      if (href !== "#home" && !section) return;
-      // the menu bar hides while the page scrolls down and comes back while it scrolls up
-      let top = section ? scrollTopFor(section, 0) : 0;
-      if (section && top < window.scrollY) {
-        const bar = document.querySelector<HTMLElement>(".site-header")?.offsetHeight ?? NAV_HEIGHT;
-        top = scrollTopFor(section, bar);
-      }
-      top = Math.max(0, top);
-
-      if (lenis) {
-        lenis.start();
-        // tagged so the hero lets this scroll pass instead of stopping on its arch
-        lenis.scrollTo(top, { duration: 1.4, userData: { anchor: true } });
-      } else {
-        window.scrollTo({ top, behavior: "smooth" });
-      }
-      // show the section in the address; a refresh still starts back at the top (layout.tsx)
-      history.replaceState(null, "", href);
+      jumpTo(href, lenis ?? undefined);
     },
     [lenis],
   );

@@ -3,12 +3,12 @@
 import Image from "next/image";
 import { useRef } from "react";
 import { gsap, SplitText, useGSAP } from "@/lib/gsap";
-import { contact } from "@/content/site";
-import { photos } from "@/content/photos";
-import { whatsappLink } from "@/lib/whatsapp";
+import type { Photo } from "@/content/photos";
+import { useEnquiry, useSite } from "@/components/providers/SiteProvider";
 import { Magnetic } from "@/components/ui/Magnetic";
 import { ArrowIcon, ChatIcon } from "@/components/ui/icons";
 import { LotusMark } from "@/components/ui/ornaments";
+import type { SectionHeading } from "@/content/db";
 
 // Soft out-of-focus light circles behind the section: [left %, top %, size rem, gold or red, drift seconds]
 const BOKEH = [
@@ -71,11 +71,6 @@ function Aperture({ className = "" }: { className?: string }) {
   );
 }
 
-const telHref = `tel:+${contact.phone.replace(/\D/g, "")}`;
-const directionsHref = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-  [...contact.address].join(", "),
-)}`;
-
 type IconProps = { className?: string };
 const stroke = {
   fill: "none",
@@ -117,33 +112,57 @@ function ClockIcon({ className = "size-5" }: IconProps) {
   );
 }
 
-const rows = [
-  { label: "Call us", lines: [contact.phone], href: telHref, Icon: PhoneIcon },
-  {
-    label: "WhatsApp",
-    lines: ["Message us any time"],
-    href: whatsappLink(),
-    Icon: ChatIcon,
-    external: true,
-  },
-  {
-    label: "Email",
-    lines: [contact.email],
-    href: `mailto:${contact.email}`,
-    Icon: MailIcon,
-  },
-  {
-    label: "Studio",
-    lines: contact.address,
-    href: directionsHref,
-    Icon: PinIcon,
-    external: true,
-  },
-  { label: "Hours", lines: contact.hours, Icon: ClockIcon },
-];
+export type ContactContent = {
+  phone: string;
+  email: string;
+  address: string[];
+  hours: string[];
+  bookingNote: { title: string; text: string };
+};
 
-export function Contact() {
+export function Contact({
+  contact,
+  photo,
+  backdrop,
+  meta,
+}: {
+  contact: ContactContent;
+  photo: Photo;
+  backdrop: Photo;
+  meta: SectionHeading;
+}) {
   const root = useRef<HTMLElement>(null);
+  const enquire = useEnquiry();
+  const { site } = useSite();
+
+  const telHref = `tel:+${contact.phone.replace(/\D/g, "")}`;
+  const directionsHref = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+    contact.address.join(", "),
+  )}`;
+
+  const rows = [
+    { label: "Call us", lines: [contact.phone], href: telHref, Icon: PhoneIcon },
+    {
+      label: "WhatsApp",
+      lines: ["Message us any time"],
+      onClick: () => enquire({ source: "contact-row" }),
+      Icon: ChatIcon,
+    },
+    {
+      label: "Email",
+      lines: [contact.email],
+      href: `mailto:${contact.email}`,
+      Icon: MailIcon,
+    },
+    {
+      label: "Studio",
+      lines: contact.address,
+      href: directionsHref,
+      Icon: PinIcon,
+      external: true,
+    },
+    { label: "Hours", lines: contact.hours, Icon: ClockIcon },
+  ];
 
   useGSAP(
     () => {
@@ -213,15 +232,15 @@ export function Contact() {
       {/* Background: an optional photo (photos.ts → contactBackdrop), otherwise soft bokeh lights
           and a slowly turning camera aperture; fine grain over both */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        {photos.contactBackdrop.src ? (
+        {backdrop.src ? (
           <>
             <Image
-              src={photos.contactBackdrop.src}
+              src={backdrop.src}
               alt=""
               fill
               sizes="100vw"
               className="object-cover"
-              style={{ objectPosition: photos.contactBackdrop.position }}
+              style={{ objectPosition: backdrop.position }}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-cream/92 via-cream/75 to-cream/45" />
           </>
@@ -258,26 +277,25 @@ export function Contact() {
         <div>
           <p className="ct-eyebrow mb-5 flex items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-accent-deep uppercase">
             <LotusMark className="h-4 w-6 text-accent" />
-            Get in touch
+            {meta.eyebrow}
           </p>
           <h2
             id="contact-title"
             className="ct-title font-display text-[clamp(2.4rem,5vw,4.4rem)] leading-[1.06]"
           >
-            Let&apos;s talk about your{" "}
+            {meta.title}{" "}
             <span className="ct-foil-mask -mb-[0.12em] inline-block overflow-hidden pb-[0.12em] align-bottom">
               <span className="ct-foil foil-deep inline-block">
-                celebration
+                {meta.titleFoil}
               </span>
             </span>
           </h2>
           <p className="ct-intro mt-6 max-w-[46ch] text-[1rem] leading-[1.8] text-ink/65">
-            Tell us the date, the place and what you&apos;re celebrating. We
-            usually reply within a few hours.
+            {meta.intro}
           </p>
 
           <ul className="mt-10 divide-y divide-ink/10 border-y border-ink/10">
-            {rows.map(({ label, lines, href, Icon, external }) => {
+            {rows.map(({ label, lines, href, onClick, Icon, external }) => {
               const body = (
                 <>
                   <span className="grid size-11 shrink-0 place-items-center rounded-full border border-accent-deep/25 text-accent-deep transition-colors duration-500 group-hover:border-accent-deep group-hover:bg-accent-deep group-hover:text-cream">
@@ -296,14 +314,22 @@ export function Contact() {
                       </span>
                     ))}
                   </span>
-                  {href && (
+                  {(href || onClick) && (
                     <ArrowIcon className="size-4 shrink-0 -translate-x-1 text-ink/30 transition duration-500 ease-luxe group-hover:translate-x-0 group-hover:text-accent-deep" />
                   )}
                 </>
               );
               return (
                 <li key={label} className="ct-row">
-                  {href ? (
+                  {onClick ? (
+                    <button
+                      type="button"
+                      onClick={onClick}
+                      className="group flex w-full items-center gap-4 py-4 text-left"
+                    >
+                      {body}
+                    </button>
+                  ) : href ? (
                     <a
                       href={href}
                       {...(external
@@ -326,15 +352,14 @@ export function Contact() {
           <div className="mt-10 flex flex-wrap items-center gap-4">
             <div className="ct-cta">
               <Magnetic>
-                <a
-                  href={whatsappLink()}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => enquire({ source: "contact" })}
                   className="btn-brand"
                 >
                   <ChatIcon className="size-[1.15rem]" />
-                  Book on WhatsApp
-                </a>
+                  {site.bookLabel}
+                </button>
               </Magnetic>
             </div>
             <a
@@ -357,12 +382,12 @@ export function Contact() {
             <div className="ct-photo relative aspect-[4/5] bg-ink/5 lg:aspect-auto lg:h-[34rem]">
               <div className="ct-photo-inner absolute inset-0">
                 <Image
-                  src={photos.contact.src}
-                  alt={photos.contact.alt}
+                  src={photo.src}
+                  alt={photo.alt}
                   fill
                   sizes="(min-width: 1024px) 40vw, (min-width: 640px) 34rem, 92vw"
                   className="object-cover"
-                  style={{ objectPosition: photos.contact.position }}
+                  style={{ objectPosition: photo.position }}
                 />
               </div>
             </div>
