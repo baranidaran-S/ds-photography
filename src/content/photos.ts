@@ -17,7 +17,7 @@
       `mobilePosition` does the same on phones, where the crop is taller.
 
    SHORTCUT: save the new photo with exactly the same name as the old one
-   (e.g. overwrite public/images/hero/wedding.jpg) — then nothing here needs to change.
+   (e.g. overwrite public/images/hero/haldi.jpg) — then nothing here needs to change.
 
    Tips: .jpg works best, about 2000px on the longest side, under ~600 KB.
    Restart or refresh the dev server if a new file doesn't show up straight away.
@@ -37,9 +37,8 @@ export type Photo = {
 /* ── 0. LOGO — centre of the menu bar ───────────────────────────────────────
    Set `src` to "" to go back to the plain text logo (lotus · DS | PHOTOGRAPHY).
    The menu bar is dark, so use a PNG with a transparent background (or an SVG) in a light or
-   gold colour. Files in public/images/logo:
-     final.png         → the final logo (camera + DS)
-     ds-final-mark.png → final.png with the empty space around it trimmed off (used here)
+   gold colour. In public/images/logo, ds-final-mark.png is the final logo (camera + DS) with the
+   empty space around it trimmed off.
    src      → the menu bar;  full → the footer (shown larger)
    height   → how tall the mark shows on computers, in pixels (phones and the scrolled bar show it smaller)
    showText → also write "PHOTOGRAPHY" under it; set to false if your logo file already has the name
@@ -287,20 +286,33 @@ const portfolio = {
    On phones the cover is a little wider than tall, so keep anything important away from the
    top and bottom edges. */
 const albumCover = {
-  src: "/images/portfolio/album-cover.jpg", // cropped square from album.png (the spine strip trimmed off)
+  src: "/images/portfolio/album-cover.jpg",
   position: "50% 50%",
   showTitle: false, // the image already has the lotus, border and "Our Stories"
 };
 
-/* ── 4. ABOUT — the photographer (1 photo) ────────────────────────────────────
-   portrait → shown as a tile mosaic: one photo sliced into a staggered grid of tiles.
-   A tall photo with the face in the upper middle works best — `position` keeps the face inside
-   the big centre tile ("50% 0%" = keep the top of the photo).   Folder: public/images/about */
+/* ── 4. ABOUT — the photographer ───────────────────────────────────────────────
+   Folder: public/images/about
+   portrait → his photo on the left: a tall photo with his face in the upper part. Its right
+              edge fades into the dark page, so keep him to the left or centre.
+   bride    → the picture at the top right; its edges fade into the dark, so keep her face near
+              the middle of what shows (shown about 4:5, a little taller than wide)
+   temple   → our city, bottom right, melting into the dark page */
 const about = {
   portrait: {
-    src: "/images/about/sivakumar.jpg", // JPG copy of "Confident Portrait Beside a DDiS Car.png" (2.4 MB → 360 KB)
-    alt: "Sivakumar, founder of DS Photography, smiling with his arms crossed",
-    position: "50% 0%",
+    src: "/images/about/sivakumar new image.png",
+    alt: "Sivakumar, founder of DS Photography, holding his camera in the studio",
+    position: "50% 20%",
+  },
+  bride: {
+    src: "/images/about/bridal image.png",
+    alt: "Bride in a red silk saree with jasmine in her hair, smiling down in warm lamplight",
+    position: "92% 40%",
+  },
+  temple: {
+    src: "/images/about/meenakshi amman temple.png",
+    alt: "The Meenakshi Amman temple tower in Madurai at sunset",
+    position: "78% 70%",
   },
 } satisfies Record<string, Photo>;
 
@@ -347,27 +359,30 @@ const reviewPhotos = {
 // every family may or may not have a sent photo
 const reviews: Record<keyof typeof reviewPhotos, ReviewPhotos> = reviewPhotos;
 
-/* ── 6. INSTAGRAM — the moving photo reel (12 photos) ───────────────────────────
-   Square crops of recent posts; the first 6 make the top row, the rest the bottom row.
-   Any photo works (it is cropped square) — save new ones in public/images/instagram/.
-   likes → the number shown with a heart when someone hovers the photo (optional). */
+/* ── 6. INSTAGRAM — a grid of 6 photos of different sizes, plus the "Follow us" tile ──────
+   The order sets each photo's spot (on computers):
+     1 → the big one, top left          2 → small, top middle      3 → tall, right
+     4 → small, under 2                 5 → small, bottom left     6 → wide, bottom middle
+   Any photo works (it's cropped to fit its spot); use `position` to keep faces in view.
+   Save new ones in public/images/instagram/.
+   likes → the number shown with a heart on the photo (optional). */
 const instagram: (Photo & { likes?: string })[] = [
   {
-    src: "/images/services/wedding.jpg",
-    alt: "Bride and groom in garlands at a temple wedding",
-    likes: "1.8k",
-  },
-  {
-    src: "/images/portfolio/prewedding-2.jpg",
-    alt: "Couple among the carved pillars of a stone temple",
-    position: "50% 55%",
-    likes: "962",
-  },
-  {
-    src: "/images/hero/haldi.jpg",
-    alt: "Bride laughing at her haldi as friends bless her",
-    position: "50% 45%",
+    src: "/images/hero/pre-wedding.jpg",
+    alt: "Couple holding hands under an old stone arch at sunset",
     likes: "2.4k",
+  },
+  {
+    src: "/images/services/engagement.jpg",
+    alt: "Bride showing her engagement ring",
+    position: "50% 55%",
+    likes: "1.3k",
+  },
+  {
+    src: "/images/services/baby-shower.jpg",
+    alt: "Husband kneeling to kiss his wife's baby bump at her baby shower",
+    position: "46% 50%",
+    likes: "2.1k",
   },
   {
     src: "/images/portfolio/newborn-3.jpg",
@@ -375,51 +390,26 @@ const instagram: (Photo & { likes?: string })[] = [
     likes: "1.1k",
   },
   {
-    src: "/images/services/engagement.jpg",
-    alt: "Bride showing her engagement ring",
-    likes: "1.3k",
-  },
-  {
     src: "/images/portfolio/birthday-3.jpg",
     alt: "Birthday girl among yellow balloons",
     likes: "874",
   },
   {
-    src: "/images/hero/maternity.jpg",
-    alt: "Mother-to-be in a flowing red gown in a bamboo forest",
-    position: "50% 40%",
-    likes: "2.1k",
-  },
-  {
-    src: "/images/portfolio/babyshower-3.jpg",
-    alt: "Couple in flower garlands at their baby shower",
-    position: "50% 30%",
-    likes: "745",
-  },
-  {
-    src: "/images/services/pre-wedding.jpg",
-    alt: "Groom kissing the bride's forehead under the trees",
-    position: "50% 40%",
-    likes: "1.5k",
-  },
-  {
-    src: "/images/hero/newborn.jpg",
-    alt: "Sleeping newborn wrapped in pink in a wooden bowl",
-    likes: "3.2k",
-  },
-  {
-    src: "/images/portfolio/wedding-3.jpg",
-    alt: "Bride smiling at her haldi in a shola crown",
-    position: "46% 45%",
-    likes: "1.2k",
-  },
-  {
-    src: "/images/services/birthday.jpg",
-    alt: "Mother and toddler son at his birthday",
-    position: "50% 40%",
-    likes: "990",
+    src: "/images/services/wedding.jpg",
+    alt: "Bride and groom in garlands at a temple wedding",
+    position: "50% 35%",
+    likes: "1.8k",
   },
 ];
+
+/* ── 6b. INSTAGRAM BACKGROUND — the image behind the whole Instagram section ─────────────
+   Leave src empty ("") for plain dark. Use a dark image (the heading is light), wider than tall;
+   it's cropped to fill the section, so keep the main glow near the edges and the middle dark. */
+const instagramBackdrop: Photo = {
+  src: "/images/instagram/Moody Amber-Edged Dark Backdrop.png",
+  alt: "",
+  position: "50% 50%",
+};
 
 /* ── 7. CONTACT — the framed photo beside the contact details ───────────────────
    A tall crop works best; `position` keeps the couple in view. */
@@ -433,7 +423,7 @@ const contactPhoto: Photo = {
    Leave src empty ("") to keep the drawn background (soft bokeh lights + camera aperture).
    Use a very light, soft, out-of-focus image; the site lays cream over it so the text stays readable. */
 const contactBackdrop: Photo = {
-  src: "/images/hero/contact-bg.jpg", // JPG copy of contact1.png (1.4 MB → 116 KB)
+  src: "/images/hero/contact-bg.jpg",
   alt: "",
   position: "50% 50%",
 };
@@ -473,6 +463,7 @@ export const photos = {
   about,
   reviews,
   instagram,
+  instagramBackdrop,
   contact: contactPhoto,
   contactBackdrop,
   films,

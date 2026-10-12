@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Mono, Lato, Mrs_Saint_Delafield, Playfair_Display } from "next/font/google";
+import { DM_Mono, Lato, Marcellus, Mrs_Saint_Delafield } from "next/font/google";
 import "lenis/dist/lenis.css";
 import "./globals.css";
 import { SmoothScroll } from "@/components/providers/SmoothScroll";
@@ -7,11 +7,12 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { FloatingContact } from "@/components/layout/FloatingContact";
 
-// Playfair Display for headings and the menu; Lato for text, labels and buttons
-const display = Playfair_Display({
+// Marcellus for headings and the menu (it comes in one weight, no italic); Lato for text, labels
+// and buttons
+const display = Marcellus({
   subsets: ["latin"],
-  style: ["normal", "italic"],
-  variable: "--font-playfair",
+  weight: "400",
+  variable: "--font-marcellus",
 });
 
 // Camera-style readouts in the Services viewfinder

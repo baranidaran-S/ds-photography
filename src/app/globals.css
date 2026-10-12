@@ -23,7 +23,7 @@
 /* next/font sets these variables on <html> */
 @theme inline {
   /* headings and the menu */
-  --font-display: var(--font-playfair), Georgia, "Times New Roman", serif;
+  --font-display: var(--font-marcellus), Georgia, "Times New Roman", serif;
   /* small labels, sub headings and buttons */
   --font-heading: var(--font-lato), "Segoe UI", system-ui, sans-serif;
   /* body text */
@@ -668,6 +668,58 @@
     .pf-nav {
       margin-top: 1.4rem;
     }
+  }
+
+  /* ── Instagram: the soft gold light in the corner of the "Follow us" tile ── */
+  .ig-follow-glow {
+    background: radial-gradient(
+      120% 90% at 100% 0%,
+      color-mix(in oklab, var(--color-brand) 22%, transparent),
+      transparent 60%
+    );
+  }
+
+  /* ── Instagram's own app-icon colours (yellow → orange → pink → purple), behind the white
+     camera in the "Follow us" tile ── */
+  .ig-brand {
+    background: radial-gradient(
+      circle at 30% 107%,
+      #fdf497 0%,
+      #fdf497 5%,
+      #fd5949 45%,
+      #d6249f 60%,
+      #285aeb 90%
+    );
+  }
+
+  /* ── About: the bride photo has no edges — long soft fades from every side (strongest on the
+     left, where the bright lights are, and at the bottom, where the temple begins), so she seems
+     to appear out of the dark page with no outline or shape to see ── */
+  .ab-bride-fade {
+    --across: linear-gradient(
+      to right,
+      transparent,
+      rgb(0 0 0 / 0.2) 16%,
+      rgb(0 0 0 / 0.65) 32%,
+      #000 46%,
+      #000 74%,
+      rgb(0 0 0 / 0.5) 88%,
+      transparent
+    );
+    --down: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(0 0 0 / 0.6) 12%,
+      #000 24%,
+      #000 56%,
+      rgb(0 0 0 / 0.55) 74%,
+      rgb(0 0 0 / 0.15) 88%,
+      transparent
+    );
+    -webkit-mask-image: var(--across), var(--down);
+    -webkit-mask-composite: source-in;
+    mask-image: var(--across), var(--down);
+    mask-composite: intersect;
   }
 
   /* ── Reviews: chat screenshots ──

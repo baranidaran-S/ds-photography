@@ -18,7 +18,8 @@ function scrollTopFor(section: HTMLElement, bar: number) {
   }
   if (spacer) return top;
   const spare = window.innerHeight - bar - view.offsetHeight;
-  return top - bar - (spare > 0 ? Math.min(spare / 2, 32) : 8);
+  // (a view exactly one screen tall, like About on computers, lands flush with no gap)
+  return top - bar - (spare >= 0 ? Math.min(spare / 2, 32) : 8);
 }
 
 /** Smooth-scrolls in-page "#section" links through Lenis; leaves other links alone. */

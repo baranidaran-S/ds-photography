@@ -13,10 +13,10 @@ import { ArrowIcon, ChatIcon } from "@/components/ui/icons";
 import { LotusMark } from "@/components/ui/ornaments";
 
 const SLIDE_SECONDS = 6;
-const DOOR_SECONDS = 1.7; // how long a new photo takes to open
-// Phones move quicker: each photo stays a shorter time and opens faster
+const FADE_SECONDS = 1.8; // how long a new photo takes to fade in over the last one
+// Phones move quicker: each photo stays a shorter time and fades in faster
 const PHONE_SLIDE_SECONDS = 3.5;
-const PHONE_DOOR_SECONDS = 1.1;
+const PHONE_FADE_SECONDS = 1.2;
 
 export function Hero() {
   const root = useRef<HTMLElement>(null);
@@ -45,11 +45,6 @@ export function Hero() {
         const slides = q<HTMLElement>(".hero-slide");
         const dots = q<HTMLElement>(".hero-dot");
         const dotFills = q<HTMLElement>(".hero-dot-fill");
-        const seams = q<HTMLElement>(".hero-seam");
-        const doors = q<HTMLElement>(".hero-door");
-        // the two lights travel from the centre to the edges (moved, not re-laid-out, so phones keep up)
-        const seamTo = (k: number, seam: HTMLElement) =>
-          (k === 0 ? -0.5 : 0.5) * (seam.parentElement?.clientWidth ?? 0);
         const imgOf = (i: number) => slides[i].querySelector("img");
 
         let current = 0;
@@ -59,7 +54,7 @@ export function Hero() {
 
         const phone = window.matchMedia("(max-width: 767px)");
         const slideSeconds = () => (phone.matches ? PHONE_SLIDE_SECONDS : SLIDE_SECONDS);
-        const doorSeconds = () => (phone.matches ? PHONE_DOOR_SECONDS : DOOR_SECONDS);
+        const fadeSeconds = () => (phone.matches ? PHONE_FADE_SECONDS : FADE_SECONDS);
 
         gsap.set(slides, { zIndex: 1, autoAlpha: 0 });
         gsap.set(slides[0], { zIndex: 3, autoAlpha: 1 });
@@ -100,7 +95,7 @@ export function Hero() {
           );
         };
 
-        // New photo opens from the centre like temple doors, with a thin light at the seam
+        // New photo gently fades in over the last one, which keeps its slow zoom as it fades away
         const show = contextSafe!((next: number) => {
           if (busy || next === current) return;
           busy = true;
@@ -111,33 +106,29 @@ export function Hero() {
 
           gsap.set(slides, { zIndex: 1 });
           gsap.set(slides[prev], { zIndex: 2 });
-          gsap.set(incoming, { zIndex: 3, autoAlpha: 1 });
+          gsap.set(incoming, { zIndex: 3 });
           dots.forEach((d, k) => {
             d.toggleAttribute("data-active", k === next);
             d.setAttribute("aria-current", String(k === next));
           });
 
-          const tl = gsap.timeline({
-            onComplete: () => {
-              gsap.set(slides[prev], { autoAlpha: 0 });
-              busy = false;
+          const leaving = drift;
+          drift = null;
+          gsap.fromTo(
+            incoming,
+            { autoAlpha: 0 },
+            {
+              autoAlpha: 1,
+              duration: reduce ? 0.8 : fadeSeconds(),
+              ease: "power1.inOut",
+              onComplete: () => {
+                leaving?.kill();
+                gsap.set(slides[prev], { autoAlpha: 0 });
+                busy = false;
+              },
             },
-          });
-          if (reduce) {
-            tl.fromTo(incoming, { opacity: 0 }, { opacity: 1, duration: 0.8 });
-          } else {
-            const door = doorSeconds();
-            tl.fromTo(
-              incoming,
-              { clipPath: "inset(0% 50% 0% 50%)" },
-              { clipPath: "inset(0% 0% 0% 0%)", duration: door, ease: "expo.inOut" },
-              0,
-            )
-              .fromTo(seams, { x: 0, autoAlpha: 1 }, { x: seamTo, duration: door, ease: "expo.inOut" }, 0)
-              .to(seams, { autoAlpha: 0, duration: 0.35 }, door - 0.3)
-              .to(imgOf(prev), { scale: 1.06, duration: door, ease: "expo.inOut" }, 0);
-            startDrift(next, 1.25);
-          }
+          );
+          startDrift(next, 1.1);
 
           runProgress();
         });
@@ -161,7 +152,6 @@ export function Hero() {
 
         if (reduce) {
           gsap.set(q("[data-reveal]"), { autoAlpha: 1 });
-          gsap.set(doors, { display: "none" });
           runProgress();
           return;
         }
@@ -176,20 +166,14 @@ export function Hero() {
 
         gsap
           .timeline({ defaults: { ease: "expo.out" } })
-          .set(q(".hero-media"), { autoAlpha: 1 }, 0)
-          // the first photo opens from the centre: two dark doors slide apart (moving whole panels
-          // is light for phones, unlike reshaping the full-screen photo every frame)
-          .set(doors, { autoAlpha: 1 }, 0)
+          // the first photo fades up from black as its slow zoom begins
           .fromTo(
-            doors,
-            { xPercent: 0 },
-            { xPercent: (k: number) => (k === 0 ? -100 : 100), duration: 1.9, ease: "expo.inOut" },
+            q(".hero-media"),
+            { autoAlpha: 0 },
+            { autoAlpha: 1, duration: 1.8, ease: "power1.inOut" },
             0,
           )
-          .set(doors, { display: "none" }, 1.9)
-          .fromTo(seams, { x: 0, autoAlpha: 1 }, { x: seamTo, duration: 1.9, ease: "expo.inOut" }, 0)
-          .to(seams, { autoAlpha: 0, duration: 0.4 }, 1.55)
-          .add(() => startDrift(0, 1.3), 0)
+          .add(() => startDrift(0, 1.15), 0)
           // copy
           .fromTo(q(".hero-ornament"), { autoAlpha: 0, y: 12 }, { autoAlpha: 1, y: 0, duration: 1.2 }, 0.9)
           .fromTo(
@@ -362,8 +346,8 @@ export function Hero() {
         gsap.delayedCall(3, setupScroll);
       });
 
-      // Start once the fonts are in and the first photo is unpacked (decoded), so the doors open onto
-      // a ready picture instead of the phone freezing to unpack it mid-intro; never wait over 1.5s
+      // Start once the fonts are in and the first photo is unpacked (decoded), so it fades in as a
+      // ready picture instead of the phone freezing to unpack it mid-intro; never wait over 1.5s
       const firstPhoto = root.current?.querySelector<HTMLImageElement>(".hero-slide img");
       const decoded = firstPhoto ? firstPhoto.decode().catch(() => {}) : Promise.resolve();
       document.fonts.ready
@@ -407,22 +391,6 @@ export function Hero() {
                   style={{ "--pos": slide.position, "--pos-m": slide.mobilePosition } as React.CSSProperties}
                 />
               </div>
-            ))}
-            {/* intro: two dark doors over the first photo that slide apart (hidden unless the intro runs) */}
-            {[0, 1].map((k) => (
-              <div
-                key={`door-${k}`}
-                aria-hidden
-                className={`hero-door invisible absolute inset-y-0 z-[4] w-[calc(50%+1px)] bg-night ${k === 0 ? "left-0" : "right-0"}`}
-              />
-            ))}
-            {[0, 1].map((k) => (
-              <div
-                key={k}
-                aria-hidden
-                className="hero-seam invisible absolute inset-y-0 z-[6] w-0.5 -translate-x-1/2 bg-brand-light shadow-[0_0_24px_6px_color-mix(in_oklab,var(--color-brand-light)_60%,transparent)]"
-                style={{ left: "50%" }}
-              />
             ))}
           </div>
 

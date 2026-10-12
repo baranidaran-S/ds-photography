@@ -225,9 +225,11 @@ export const about = {
   stats: [
     { value: 12, suffix: "+", label: "Years behind the lens" },
     { value: 850, suffix: "+", label: "Celebrations captured" },
-    { value: 1043, suffix: "+", label: "Locations" },
+    { value: 1043, suffix: "+", label: "Locations across Tamil Nadu" },
   ],
-  photo: photos.about.portrait,
+  /** handwritten line under the heading */
+  tagline: "A story worth remembering.",
+  photos: photos.about,
 };
 
 export type ChatMessage = {
