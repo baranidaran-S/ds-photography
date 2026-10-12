@@ -13,38 +13,15 @@ import { ArrowIcon, ChatIcon } from "@/components/ui/icons";
 import { LotusMark } from "@/components/ui/ornaments";
 import type { HeroCopy } from "@/content/db";
 
-const SLIDE_SECONDS = 4.5;
-// Each new photo appears as a grid of squares that grow in as a diagonal wave, top left to
-// bottom right
-const TILE_PX = 160; // roughly how big each square is
-const WAVE_SECONDS = 0.9; // from the first square setting off to the last one
-const TILE_SECONDS = 0.7; // how long one square takes to grow
-// Phones move quicker: each photo stays a shorter time, with smaller squares and a faster wave
-const PHONE_SLIDE_SECONDS = 3;
-const PHONE_TILE_PX = 96;
-const PHONE_WAVE_SECONDS = 0.7;
-const PHONE_TILE_SECONDS = 0.55;
-
-/* The new photo's outline while its squares grow: each square is a rectangle around its own
-   centre, `grown` (0–1) of its full size. Every square is joined to the top-left corner by a
-   there-and-back line with no area, so all of them make one shape. */
-function mosaicClip(w: number, h: number, cols: number, rows: number, grown: (c: number, r: number) => number) {
-  const cw = w / cols;
-  const ch = h / rows;
-  const pts = ["0px 0px", "0px 0px", "0px 0px"];
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      const s = grown(c, r);
-      if (s <= 0) continue;
-      const x0 = ((c + 0.5 - s / 2) * cw).toFixed(1);
-      const x1 = ((c + 0.5 + s / 2) * cw).toFixed(1);
-      const y0 = ((r + 0.5 - s / 2) * ch).toFixed(1);
-      const y1 = ((r + 0.5 + s / 2) * ch).toFixed(1);
-      pts.push(`${x0}px ${y0}px`, `${x1}px ${y0}px`, `${x1}px ${y1}px`, `${x0}px ${y1}px`, `${x0}px ${y0}px`, "0px 0px");
-    }
-  }
-  return `polygon(${pts.join(", ")})`;
-}
+const SLIDE_SECONDS = 5.5;
+// Each new photo slides up over the last one, which sinks back like a card: a little smaller,
+// with rounded corners, and dimmer
+const CARD_SECONDS = 1.3;
+const CARD_SCALE = 0.9; // how far the last photo sinks back
+const CARD_RADIUS = 24; // its corner rounding (px) once sunk; the new photo starts with it too
+// Phones move quicker: each photo stays a shorter time and slides in faster
+const PHONE_SLIDE_SECONDS = 3.5;
+const PHONE_CARD_SECONDS = 1;
 
 type HeroOutro = {
   left: string;
@@ -91,6 +68,7 @@ export function Hero({
         const dots = q<HTMLElement>(".hero-dot");
         const dotFills = q<HTMLElement>(".hero-dot-fill");
         const imgOf = (i: number) => slides[i].querySelector("img");
+        const dimOf = (i: number) => slides[i].querySelector(".hero-slide-dim");
 
         let current = 0;
         let busy = false;
@@ -139,8 +117,8 @@ export function Hero({
           );
         };
 
-        // The new photo grows over the last one as a wave of squares, top left to bottom right;
-        // the last photo keeps its slow zoom until it's covered
+        // The new photo slides up over the last one, which sinks back like a card and keeps its
+        // slow zoom until it's covered
         const show = contextSafe!((next: number) => {
           if (busy || next === current) return;
           busy = true;
@@ -172,37 +150,25 @@ export function Hero({
               { autoAlpha: 1, duration: 0.8, ease: "power1.inOut", onComplete: done },
             );
           } else {
-            // the photo's own size (not the arch's shrunken one), cut into roughly square tiles
-            const w = incoming.offsetWidth;
-            const h = incoming.offsetHeight;
-            const tilePx = phone.matches ? PHONE_TILE_PX : TILE_PX;
-            const cols = Math.max(2, Math.round(w / tilePx));
-            const rows = Math.max(2, Math.round(h / tilePx));
-            const wave = phone.matches ? PHONE_WAVE_SECONDS : WAVE_SECONDS;
-            const tile = phone.matches ? PHONE_TILE_SECONDS : TILE_SECONDS;
-            const grow = gsap.parseEase("power3.out");
-            const clock = { t: 0 };
-            // a square sets off once the wave reaches it (its distance from the top-left corner);
-            // it grows a touch past its cell, so the thin gaps between squares close early
-            const grown = (c: number, r: number) => {
-              const local = (clock.t - ((c + r) / (cols + rows - 2)) * wave) / tile;
-              return local <= 0 ? 0 : grow(Math.min(1, local)) * 1.04;
-            };
-            const draw = () => {
-              incoming.style.clipPath = mosaicClip(w, h, cols, rows, grown);
-            };
-            draw();
-            gsap.set(incoming, { autoAlpha: 1 });
-            gsap.to(clock, {
-              t: wave + tile,
-              duration: wave + tile,
-              ease: "none",
-              onUpdate: draw,
-              onComplete: () => {
-                incoming.style.clipPath = "";
-                done();
-              },
-            });
+            const outgoing = slides[prev];
+            gsap.set(incoming, { autoAlpha: 1, yPercent: 100, borderRadius: CARD_RADIUS });
+            gsap
+              .timeline({
+                defaults: {
+                  duration: phone.matches ? PHONE_CARD_SECONDS : CARD_SECONDS,
+                  ease: "power3.inOut",
+                },
+                onComplete: () => {
+                  gsap.set([outgoing, incoming], { clearProps: "transform,borderRadius" });
+                  gsap.set(dimOf(prev), { opacity: 0 });
+                  done();
+                },
+              })
+              // the last photo sinks back and dims…
+              .to(outgoing, { scale: CARD_SCALE, borderRadius: CARD_RADIUS }, 0)
+              .to(dimOf(prev), { opacity: 0.55 }, 0)
+              // …as the new one slides up over it, its rounded corners squaring off as it lands
+              .to(incoming, { yPercent: 0, borderRadius: 0 }, 0.08);
           }
           startDrift(next, 1.1);
 
@@ -466,6 +432,8 @@ export function Hero({
                   className="object-cover [object-position:var(--pos-m)] lg:[object-position:var(--pos)]"
                   style={{ "--pos": slide.position, "--pos-m": slide.mobilePosition } as React.CSSProperties}
                 />
+                {/* darkens the photo as it sinks back behind the next one */}
+                <span aria-hidden className="hero-slide-dim absolute inset-0 bg-night opacity-0" />
               </div>
             ))}
           </div>
