@@ -3,14 +3,32 @@
 import Image from "next/image";
 import { useRef } from "react";
 import { gsap, SplitText, useGSAP } from "@/lib/gsap";
-import { about } from "@/content/site";
 import { LotusMark } from "@/components/ui/ornaments";
+import type { SectionHeading } from "@/content/db";
+import type { Photo } from "@/content/photos";
 
 // handwritten lines appear as if written left to right
 const WRITE_FROM = "inset(-30% 100% -30% -10%)";
 const WRITE_TO = "inset(-30% -15% -30% -10%)";
 
-export function About() {
+type AboutContent = {
+  name: string;
+  firstName: string;
+  role: string;
+  story: string[];
+  stats: { value: number; suffix: string; label: string }[];
+  /** the handwritten line under the heading */
+  tagline: string;
+  photos: { portrait: Photo; bride: Photo; temple: Photo };
+};
+
+export function About({
+  about,
+  meta,
+}: {
+  about: AboutContent;
+  meta: SectionHeading;
+}) {
   const root = useRef<HTMLElement>(null);
   const { portrait, bride, temple } = about.photos;
 
@@ -165,17 +183,21 @@ export function About() {
         <div className="ab-story relative z-10 -mt-12 px-5 sm:px-8 lg:mt-0 lg:flex lg:flex-col lg:justify-center lg:px-[1.5cqw] lg:py-[3.6svh]">
           <p className="ab-eyebrow mb-6 flex lg:mb-[2.2svh] items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-brand-light uppercase">
             <LotusMark className="h-4 w-6 text-accent" />
-            Our story
+            {meta.eyebrow}
             <span aria-hidden className="ab-eyebrow-line ml-3 h-px w-16 origin-left bg-brand/55" />
           </p>
           <h2
             id="about-title"
             className="ab-title font-display text-[clamp(3rem,13vw,4.6rem)] leading-[0.94] uppercase lg:text-[min(5.6cqw,8.2svh)]"
           >
-            <span className="block">Behind</span>
-            <span className="block">Every</span>
+            {/* each word on its own line (Behind / Every), then the gold words (Frame) */}
+            {meta.title.split(/\s+/).filter(Boolean).map((word, i) => (
+              <span key={`${i}-${word}`} className="block">
+                {word}
+              </span>
+            ))}
             <span className="ab-foil-mask -mb-[0.08em] block overflow-hidden pb-[0.08em]">
-              <span className="ab-foil foil inline-block">Frame</span>
+              <span className="ab-foil foil inline-block">{meta.titleFoil}</span>
             </span>
           </h2>
           <p className="ab-script mt-3 lg:mt-[1svh] origin-left -rotate-3 pr-[0.1em] font-signature text-[clamp(1.7rem,7vw,2.3rem)] text-brand lg:text-[min(3.2cqw,5.4svh)]">

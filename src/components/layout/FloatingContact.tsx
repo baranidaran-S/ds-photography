@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { ScrollTrigger, useGSAP } from "@/lib/gsap";
-import { whatsappLink } from "@/lib/whatsapp";
+import { useWhatsapp } from "@/components/providers/SiteProvider";
 
 /** Chat bubble with a phone handset: the familiar WhatsApp-style mark */
 function WhatsAppIcon({ className = "size-7" }: { className?: string }) {
@@ -24,9 +24,14 @@ function WhatsAppIcon({ className = "size-7" }: { className?: string }) {
 }
 
 /** WhatsApp button in the bottom-right corner. It pops in once the visitor scrolls past the hero
-    (globals.css → .fab). */
+    (globals.css → .fab).
+
+    This one goes straight to the chat rather than opening the enquiry form: it looks like
+    WhatsApp, so a form in its place is a surprise. The form still fronts the "Book" and
+    "Enquire" buttons, where the details are worth collecting. */
 export function FloatingContact() {
   const root = useRef<HTMLDivElement>(null);
+  const whatsapp = useWhatsapp();
 
   useGSAP(() => {
     const el = root.current;
@@ -44,7 +49,7 @@ export function FloatingContact() {
       className="fab fixed right-4 bottom-4 z-30 sm:right-6 sm:bottom-6"
     >
       <a
-        href={whatsappLink()}
+        href={whatsapp()}
         target="_blank"
         rel="noopener noreferrer"
         aria-label="Chat with us on WhatsApp"

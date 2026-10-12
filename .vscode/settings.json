@@ -1,0 +1,13 @@
+{
+  // Tailwind v4 puts its configuration in the stylesheet itself — @theme,
+  // @utility, @custom-variant. The editor's built-in CSS checker predates that
+  // and flags them as unknown, which is what put a warning dot on src/.
+  // Nothing is wrong with the file; the checker simply has not heard of them.
+  "css.lint.unknownAtRules": "ignore",
+
+  // Treat the stylesheet as Tailwind's own dialect, so the Tailwind IntelliSense
+  // extension handles it instead of the plain CSS checker.
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
+}

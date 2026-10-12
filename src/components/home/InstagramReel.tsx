@@ -3,10 +3,10 @@
 import Image from "next/image";
 import { useRef } from "react";
 import { gsap, SplitText, useGSAP } from "@/lib/gsap";
-import { instagram } from "@/content/site";
-import { photos } from "@/content/photos";
+import type { Photo } from "@/content/photos";
 import { ArrowIcon } from "@/components/ui/icons";
 import { LotusMark } from "@/components/ui/ornaments";
+import type { SectionHeading } from "@/content/db";
 
 /* A "bento" grid: photos of different sizes fitted together, with the Follow tile as one of them.
    On phones it's two columns; from tablets up, four columns and three rows:
@@ -29,7 +29,9 @@ const SPOTS = [
   { className: "aspect-square md:aspect-auto", sizes: SMALL },
   { className: "col-span-2 aspect-[2/1] md:aspect-auto", sizes: "(min-width: 1320px) 612px, (min-width: 1024px) 47vw, (min-width: 768px) 50vw, 100vw" },
 ];
-const shown = photos.instagram.slice(0, SPOTS.length);
+
+export type InstagramTile = Photo & { likes?: string };
+type InstagramMeta = { handle: string; url: string };
 
 function InstagramGlyph({ className = "size-5", strokeWidth = 1.7 }: { className?: string; strokeWidth?: number }) {
   return (
@@ -48,7 +50,15 @@ function InstagramGlyph({ className = "size-5", strokeWidth = 1.7 }: { className
   );
 }
 
-function Tile({ photo, spot }: { photo: (typeof shown)[number]; spot: (typeof SPOTS)[number] }) {
+function Tile({
+  photo,
+  spot,
+  instagram,
+}: {
+  photo: InstagramTile;
+  spot: (typeof SPOTS)[number];
+  instagram: InstagramMeta;
+}) {
   return (
     <a
       href={instagram.url}
@@ -89,8 +99,20 @@ function Tile({ photo, spot }: { photo: (typeof shown)[number]; spot: (typeof SP
   );
 }
 
-export function InstagramReel() {
+export function InstagramReel({
+  photos,
+  instagram,
+  meta,
+  backdrop,
+}: {
+  photos: InstagramTile[];
+  instagram: InstagramMeta;
+  meta: SectionHeading;
+  backdrop: Photo;
+}) {
   const root = useRef<HTMLElement>(null);
+  // the grid has six photo spots; any more photos in the admin are left out
+  const shown = photos.slice(0, SPOTS.length);
 
   useGSAP(
     () => {
@@ -140,16 +162,17 @@ export function InstagramReel() {
       // the grid fills the rest, keeping its shape (on short screens it gets narrower, not squashed)
       className="relative overflow-hidden bg-night py-24 text-cream lg:flex lg:h-svh lg:min-h-[36rem] lg:flex-col lg:py-[5svh]"
     >
-      {/* Background image (photos.ts → instagramBackdrop); plain dark without one */}
-      {photos.instagramBackdrop.src && (
+      {/* Background image (photos.ts → instagramBackdrop, unless the admin has set one); plain
+          dark without one */}
+      {backdrop.src && (
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <Image
-            src={photos.instagramBackdrop.src}
+            src={backdrop.src}
             alt=""
             fill
             sizes="100vw"
             className="object-cover"
-            style={{ objectPosition: photos.instagramBackdrop.position }}
+            style={{ objectPosition: backdrop.position }}
           />
         </div>
       )}
@@ -157,15 +180,15 @@ export function InstagramReel() {
       <div className="relative mx-auto max-w-[1320px] px-5 text-center sm:px-8 lg:shrink-0">
         <p className="ig-eyebrow mb-5 flex items-center justify-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-brand-light uppercase lg:mb-[1.8svh]">
           <LotusMark className="h-4 w-6 text-accent" />
-          On Instagram
+          {meta.eyebrow}
         </p>
         <h2
           id="instagram-title"
           className="ig-title font-display text-[clamp(2.2rem,4.4vw,4rem)] leading-[1.06] lg:text-[clamp(2rem,min(4.4vw,7svh),4rem)]"
         >
-          Fresh from our latest{" "}
+          {meta.title}{" "}
           <span className="ig-foil-mask -mb-[0.12em] inline-block overflow-hidden pb-[0.12em] align-bottom">
-            <span className="ig-foil foil inline-block">shoots</span>
+            <span className="ig-foil foil inline-block">{meta.titleFoil}</span>
           </span>
         </h2>
       </div>
@@ -175,7 +198,7 @@ export function InstagramReel() {
       <div className="relative mx-auto mt-12 w-full max-w-[1320px] px-5 sm:px-8 lg:mt-[4svh] lg:flex lg:min-h-0 lg:flex-1 lg:justify-center lg:px-12">
         <div className="ig-grid grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-4 md:grid-rows-[repeat(3,clamp(10rem,16vw,14.5rem))] md:gap-3.5 lg:aspect-[1224/718] lg:h-full lg:max-w-full lg:grid-rows-3">
           {shown.map((photo, i) => (
-            <Tile key={photo.src} photo={photo} spot={SPOTS[i]} />
+            <Tile key={`${i}-${photo.src}`} photo={photo} spot={SPOTS[i]} instagram={instagram} />
           ))}
 
           {/* Follow tile: a wide bar on phones (icon, name, arrow in a row); from tablets up the last

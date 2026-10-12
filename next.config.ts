@@ -4,8 +4,12 @@ const nextConfig: NextConfig = {
   images: {
     qualities: [75, 85],
     formats: ["image/avif", "image/webp"],
-    // YouTube thumbnails for the film cards (Films.tsx)
-    remotePatterns: [new URL("https://i.ytimg.com/vi/**")],
+    remotePatterns: [
+      // YouTube thumbnails for the film cards (Films.tsx)
+      new URL("https://i.ytimg.com/vi/**"),
+      // every photo uploaded through the admin
+      new URL("https://res.cloudinary.com/**"),
+    ],
   },
 };
 
