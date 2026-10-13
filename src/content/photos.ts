@@ -94,6 +94,18 @@ const hero = {
   },
 } satisfies Record<string, Photo>;
 
+/* ── 1b. HERO BACKGROUND — behind the arch, once the first photo has shrunk into it ──────
+   Leave src empty ("") for plain cream. Use a soft, light image (the words beside the arch are
+   dark); it's cropped to fill the screen. Phones show only a narrow upright slice of it:
+   `mobilePosition` picks which (here the soft leaf shadows on the left, away from the flowers
+   that would sit behind the words). */
+const heroBackdrop: Photo = {
+  src: "/images/hero/hero_bg.png",
+  alt: "",
+  position: "50% 50%",
+  mobilePosition: "15% 50%",
+};
+
 /* ── 2. SERVICES — the camera viewfinder (7 services × 2 photos) ─────────────
    wide → landscape photo, shown on computers and tablets (big picture and its small thumbnail)
    tall → portrait photo, shown on phones (big picture and its small thumbnail)
@@ -457,6 +469,7 @@ const films: Photo[] = [
 export const photos = {
   logo,
   hero,
+  heroBackdrop,
   services,
   portfolio,
   albumCover,

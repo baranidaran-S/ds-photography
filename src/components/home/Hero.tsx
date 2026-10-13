@@ -6,6 +6,7 @@ import type Lenis from "lenis";
 import { useLenis } from "lenis/react";
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
 import type { HeroSlide } from "@/content/site";
+import type { Photo } from "@/content/photos";
 import { useEnquiry, useSite } from "@/components/providers/SiteProvider";
 import { useAnchorScroll } from "@/hooks/useAnchorScroll";
 import { Magnetic } from "@/components/ui/Magnetic";
@@ -34,10 +35,13 @@ export function Hero({
   slides: heroSlides,
   outro: heroOutro,
   copy,
+  backdrop,
 }: {
   slides: HeroSlide[];
   outro: HeroOutro;
   copy: HeroCopy;
+  /** the picture behind the arch once the photo has shrunk into it (none: plain cream) */
+  backdrop: Photo;
 }) {
   const root = useRef<HTMLElement>(null);
   const enquire = useEnquiry();
@@ -283,6 +287,8 @@ export function Hero({
               },
               0.25,
             )
+            // the background picture fades in with the cream
+            .fromTo(q(".hero-backdrop"), { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.4 }, 0.25)
             .fromTo(
               q(".hero-arch-line"),
               { autoAlpha: 0, scale: 1.06 },
@@ -412,6 +418,27 @@ export function Hero({
         aria-label="Introduction"
         className="sticky top-0 isolate flex min-h-svh flex-col overflow-hidden bg-night text-cream"
       >
+        {/* Behind the arch once the photo has shrunk into it (photos.ts → heroBackdrop) */}
+        {backdrop.src && (
+          <div aria-hidden className="hero-backdrop invisible absolute inset-0 -z-30">
+            <Image
+              src={backdrop.src}
+              alt=""
+              fill
+              sizes="100vw"
+              className="object-cover [object-position:var(--pos-m)] lg:[object-position:var(--pos)]"
+              style={
+                {
+                  "--pos": backdrop.position ?? "50% 50%",
+                  "--pos-m": backdrop.mobilePosition || backdrop.position || "50% 50%",
+                } as React.CSSProperties
+              }
+            />
+            {/* a soft cream layer keeps the picture gentle, so the words beside the arch stand out */}
+            <div className="absolute inset-0 bg-cream/40" />
+          </div>
+        )}
+
         {/* Photos */}
         <div data-reveal className="hero-media absolute inset-0 -z-20 overflow-hidden">
           <div className="hero-slides absolute inset-0">
@@ -461,21 +488,21 @@ export function Hero({
           <p className="font-display text-[clamp(1.8rem,3.2vw,3.4rem)] leading-[1.1] text-accent-deep">
             {heroOutro.left}
           </p>
-          <p className="max-w-[34ch] text-[0.9rem] text-pretty leading-[1.75] text-ink/70 lg:text-[0.98rem]">
+          <p className="max-w-[34ch] text-[0.9rem] text-pretty leading-[1.75] text-ink/80 lg:text-[0.98rem]">
             {heroOutro.intro}
           </p>
         </div>
         <div className="hero-outro hero-outro-b invisible absolute inset-x-0 top-[calc(var(--arch-top,0px)_+_var(--arch-h,0px)_+_1.5rem)] z-10 flex flex-col items-center gap-4 px-6 text-center lg:inset-x-auto lg:left-[calc(var(--arch-left,0px)_+_var(--arch-w,0px)_+_3.5rem)] lg:top-[calc(var(--arch-top,0px)_+_var(--arch-h,0px)_/_2)] lg:w-[calc(var(--arch-left,0px)_-_6rem)] lg:max-w-[26rem] lg:-translate-y-1/2 lg:items-start lg:gap-6 lg:px-0 lg:text-left">
           <p className="font-display text-[clamp(1.8rem,3.2vw,3.4rem)] leading-[1.1]">
-            <span className="foil-deep">{heroOutro.right}</span>
+            <span className="foil-deep foil-antique">{heroOutro.right}</span>
           </p>
-          <p className="font-heading text-[0.68rem] font-semibold tracking-[0.24em] text-ink/55 uppercase">
+          <p className="font-heading text-[0.68rem] font-semibold tracking-[0.24em] text-ink/70 uppercase">
             {copy.eyebrow}
           </p>
           <a
             href={heroOutro.cta.href}
             onClick={(e) => scrollTo(e)}
-            className="group inline-flex items-center gap-3 border border-accent-deep/35 px-6 py-3 font-heading text-[0.72rem] font-semibold tracking-[0.16em] text-accent-deep uppercase transition-colors duration-500 hover:border-accent-deep hover:bg-accent-deep hover:text-cream"
+            className="group inline-flex items-center gap-3 border border-accent-deep/60 px-6 py-3 font-heading text-[0.72rem] font-semibold tracking-[0.16em] text-accent-deep uppercase transition-colors duration-500 hover:border-accent-deep hover:bg-accent-deep hover:text-cream"
           >
             {heroOutro.cta.label}
             <ArrowIcon className="size-4 transition-transform duration-500 ease-luxe group-hover:translate-x-1" />

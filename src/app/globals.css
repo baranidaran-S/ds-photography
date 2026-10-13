@@ -262,6 +262,18 @@
     background-clip: text;
     color: transparent;
   }
+  /* Deeper still, antique gold: for words on a picture background, where the normal deep gold
+     would sink into warm beige (the hero's arch view) */
+  .foil-deep.foil-antique {
+    background-image: linear-gradient(
+      100deg,
+      color-mix(in oklab, var(--color-brand) 38%, black) 0%,
+      color-mix(in oklab, var(--color-brand) 60%, black) 32%,
+      color-mix(in oklab, var(--color-brand) 46%, black) 50%,
+      color-mix(in oklab, var(--color-brand) 70%, black) 62%,
+      color-mix(in oklab, var(--color-brand) 38%, black) 100%
+    );
+  }
   /* the moving shine runs on computers only; touch screens keep the gold, still (lighter to draw) */
   @media (prefers-reduced-motion: no-preference) and (hover: hover) and (pointer: fine) {
     .foil,

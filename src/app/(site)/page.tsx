@@ -51,7 +51,12 @@ export default async function Home() {
           dangerouslySetInnerHTML={{ __html: seo.schema }}
         />
       )}
-      <Hero slides={c.heroSlides} outro={c.heroOutro} copy={c.hero} />
+      <Hero
+        slides={c.heroSlides}
+        outro={c.heroOutro}
+        copy={c.hero}
+        backdrop={c.pagePhotos.heroBackdrop}
+      />
       <Services services={c.services} meta={c.servicesMeta} />
       <Films films={c.films} />
       <Portfolio

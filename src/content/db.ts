@@ -397,6 +397,7 @@ export function getPagePhotos() {
     contact: photos.contact,
     contactBackdrop: photos.contactBackdrop,
     instagramBackdrop: photos.instagramBackdrop,
+    heroBackdrop: photos.heroBackdrop,
     albumCover: builtInAlbumCover,
   };
   return safely(
@@ -411,6 +412,9 @@ export function getPagePhotos() {
         instagramBackdrop: v.instagramBackdrop
           ? toPhoto(v.instagramBackdrop)
           : photos.instagramBackdrop,
+        heroBackdrop: v.heroBackdrop
+          ? toPhoto(v.heroBackdrop)
+          : photos.heroBackdrop,
         albumCover: cover.src
           ? {
               ...toPhoto(cover),

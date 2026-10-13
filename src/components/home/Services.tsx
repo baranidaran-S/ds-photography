@@ -141,6 +141,7 @@ export function Services({
         // Clicking the photo already showing takes the shot again
         busy = true;
         progress?.kill();
+        gsap.set(fills, { scaleX: 0 }); // the last thumbnail's timer line clears straight away
         wake(next); // a thumbnail can jump to a photo that hasn't been woken yet
         const prev = current;
         current = next;
@@ -155,6 +156,8 @@ export function Services({
           gsap.set([slides[prev], names[prev], ctas[prev]], { autoAlpha: 0 });
           gsap.set([slides[next], names[next], ctas[next]], { autoAlpha: 1 });
         };
+        // the new photo's timer line starts as soon as the photo appears, while the shutter is
+        // still settling, so the slideshow never pauses between photos
         const done = () => {
           busy = false;
           if (queued !== null && queued !== current) {
@@ -164,11 +167,11 @@ export function Services({
             return;
           }
           queued = null;
-          startProgress();
         };
 
         if (reduce) {
           swap();
+          startProgress();
           gsap.fromTo(slides[next], { opacity: 0 }, { opacity: 1, duration: 0.6, onComplete: done });
           return;
         }
@@ -177,6 +180,7 @@ export function Services({
           .timeline({ onComplete: done })
           .to(iris, { scale: 0, rotation: 70, svgOrigin: "0 0", duration: 0.32, ease: "power2.in" })
           .add(swap)
+          .add(startProgress)
           .set(flash, { opacity: 0.45 })
           .to(iris, { scale: 1, rotation: 140, svgOrigin: "0 0", duration: 0.6, ease: "power3.out" })
           .set(iris, { rotation: 0 })
@@ -213,7 +217,7 @@ export function Services({
         end: "bottom 25%",
         onToggle: (self) => {
           inView = self.isActive;
-          if (inView && !busy) startProgress();
+          if (inView) startProgress();
           else progress?.pause();
         },
       });
