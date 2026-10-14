@@ -15,9 +15,10 @@ export const site = {
 };
 
 // Menu links in page order. On computers the first half sits left of the logo, the rest on the right.
+// "#…" links are sections of the home page; Gallery is a page of its own.
 export const navLinks = [
   { label: "Home", href: "#home" },
-  { label: "Services", href: "#services" },
+  { label: "Gallery", href: "/gallery" },
   { label: "Portfolio", href: "#portfolio" },
   { label: "About", href: "#about" },
   { label: "Reviews", href: "#reviews" },
@@ -156,6 +157,9 @@ export type Story = {
   cover: Photo;
   /** Two smaller prints from the same day */
   photos: [Photo, Photo];
+  /** The gallery page with their whole story (/gallery/<category>/<kind>), opened by the
+      spread's "See full story" button; no link, no button */
+  link?: string;
 };
 
 // Portfolio album: one spread per past shoot. Names, places, dates and notes are placeholders —
@@ -164,6 +168,7 @@ export const stories: Story[] = [
   {
     category: "Wedding",
     title: "Ananya & Sourav",
+    link: "/gallery/weddings/hindu-wedding",
     place: "Kolkata",
     date: "February 2025",
     note: "Haldi in the morning, sindoor daan by night. Two days of conch shells, laughter and happy tears.",
@@ -173,6 +178,7 @@ export const stories: Story[] = [
   {
     category: "Pre-wedding",
     title: "Riya & Kabir",
+    link: "/gallery/couple/pre-wedding",
     place: "Hampi",
     date: "November 2024",
     note: "Sunrise among the old temple ruins, then a quiet hour by the water before the crowds came in.",
@@ -185,6 +191,7 @@ export const stories: Story[] = [
   {
     category: "Baby shower",
     title: "Meghna & Arijit",
+    link: "/gallery/maternity-baby/baby-shower",
     place: "Bengaluru",
     date: "August 2025",
     note: "Balloons, bangles and blessings from both families, and a lot of happy chaos in between.",
@@ -197,6 +204,7 @@ export const stories: Story[] = [
   {
     category: "Newborn",
     title: "Baby Ved",
+    link: "/gallery/maternity-baby/newborn",
     place: "Chennai",
     date: "March 2025",
     note: "Twelve days old and fast asleep. A calm, cosy session at home with his proud new parents.",
@@ -206,6 +214,7 @@ export const stories: Story[] = [
   {
     category: "First birthday",
     title: "Myra turns one",
+    link: "/gallery/kids-birthdays/first-birthday",
     place: "Kochi",
     date: "June 2025",
     note: "A garden party with golden balloons, a flower crown and one very serious cake smash.",

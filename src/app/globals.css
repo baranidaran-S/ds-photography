@@ -769,6 +769,314 @@
     background: #00a884;
     color: #fff;
   }
+
+  /* ── Gallery (GalleryBento.tsx): a bento of category tiles ──
+     On computers a soft light and a gold edge follow the mouse across the tile under it
+     (GalleryBento sets --x and --y), and the other tiles dim a little. */
+  .gc-tile::before,
+  .gc-tile::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s var(--ease-luxe);
+  }
+  .gc-tile::before {
+    padding: 1px;
+    background: radial-gradient(260px circle at var(--x, 50%) var(--y, 50%), var(--color-brand), transparent 70%);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+  }
+  .gc-tile::after {
+    background: radial-gradient(
+      400px circle at var(--x, 50%) var(--y, 50%),
+      color-mix(in oklab, var(--color-cream) 13%, transparent),
+      transparent 60%
+    );
+  }
+  /* Touch screens: the tile crossing the middle of the screen glows the same way */
+  .gc-tile[data-lit]::before,
+  .gc-tile[data-lit]::after {
+    opacity: 1;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .gc-tile:hover::before,
+    .gc-tile:hover::after {
+      opacity: 1;
+    }
+    .gc-tile {
+      transition:
+        translate 0.5s var(--ease-luxe),
+        filter 0.5s var(--ease-luxe);
+    }
+    /* (a filter, as GSAP leaves its own opacity on the tiles after revealing them) */
+    .gc-grid:has(.gc-tile:hover) .gc-tile:not(:hover) {
+      filter: brightness(0.55) saturate(0.7);
+    }
+  }
+  /* Shade at the bottom for the name, and a little at the top for the arrow */
+  .gc-shade {
+    background:
+      linear-gradient(0deg, rgb(0 0 0 / 0.82) 0%, rgb(0 0 0 / 0.35) 34%, transparent 58%),
+      linear-gradient(180deg, rgb(0 0 0 / 0.4) 0%, transparent 22%);
+  }
+  /* A category still waiting for its photo: warm light in the dark behind a faint lotus */
+  .gc-blank {
+    background:
+      radial-gradient(70% 55% at 50% 38%, color-mix(in oklab, var(--color-brand) 16%, transparent), transparent 72%),
+      radial-gradient(60% 40% at 50% 100%, color-mix(in oklab, var(--color-accent) 14%, transparent), transparent 70%),
+      #141111;
+  }
+  /* Under the tiles: every kind of shoot gliding past (KindsBand.tsx). Each row holds its list
+     twice and slides by exactly one copy, so the loop never shows a seam. Soft fades at both
+     edges; paused under the mouse; still for reduced motion. */
+  .gc-band-row {
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  }
+  .gc-band-track {
+    display: flex;
+    width: max-content;
+    /* the English row is about four and a half times as long as the traditional one, so the two
+       durations keep them gliding at about the same speed */
+    animation: gc-band 240s linear infinite;
+  }
+  .gc-band-track[data-reverse] {
+    animation-direction: reverse;
+    animation-duration: 52s;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .gc-band:hover .gc-band-track {
+      animation-play-state: paused;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gc-band-track {
+      animation: none;
+    }
+  }
+  /* The "Don't see your celebration?" tile that closes the grid */
+  .gc-ask {
+    background:
+      radial-gradient(90% 90% at 100% 0%, color-mix(in oklab, var(--color-brand) 14%, transparent), transparent 65%),
+      radial-gradient(80% 80% at 0% 100%, color-mix(in oklab, var(--color-accent) 12%, transparent), transparent 65%),
+      #141111;
+  }
+
+  /* ── Gallery category page (CategoryWheel.tsx): a frame in the middle, and a wheel of photo
+     tiles turning behind it ──
+     Everything is sized from the space between the heading and the name (.cw-middle is a size
+     container), so it fits any screen: the frame's width (--fw), the tiles, and the wheel's
+     radius (--R), set so the tile next to the top sits just against the frame. --step is the
+     angle between tiles and --reach how many show each side; CategoryWheel reads both and places
+     the tiles. The tile at the top hides behind the frame's upper part. */
+  .cw-middle {
+    container-type: size;
+    touch-action: pan-y;
+  }
+  /* The scroll room under the stage is only used when the wheel turns on scroll */
+  @media (prefers-reduced-motion: reduce) {
+    .cw-room {
+      display: none;
+    }
+  }
+  /* Phones and tablets: the frame keeps one shape on every phone, as wide as it can be while the
+     heading, frame and name still fit the screen (about 21rem goes to the menu bar, the heading,
+     the name and the bar). The middle is just the frame's height, so everything sits close
+     together straight under the menu bar, and on a tall phone the spare room is left at the
+     bottom. One tile each side peeks in from behind the frame's edges.
+     Computers: a 4:5 frame filling the space, with two big tiles each side close round it (no
+     wider than a third of the screen, so the outer tiles never reach the edges). */
+  @media (max-width: 1023px) {
+    .cw-middle {
+      --fw: min(80vw, calc((100svh - 21rem) / 1.45), 440px);
+      --fh: calc(var(--fw) * 1.45);
+      height: calc(var(--fh) + 2.5rem);
+    }
+  }
+  .cw-space {
+    --step: 30deg;
+    --reach: 1;
+    --top: calc((100cqh - var(--fh)) / 2);
+    --tile: calc(var(--fw) * 0.32);
+    --R: calc((var(--fw) / 2 + var(--tile) * 0.3) / sin(var(--step)));
+  }
+  @media (min-width: 1024px) {
+    .cw-space {
+      --step: 25deg;
+      --reach: 2;
+      --fw: min(72cqh, 31cqw, 470px);
+      --fh: calc(var(--fw) * 1.25);
+      --tile: calc(var(--fw) * 0.5);
+      --R: calc((var(--fw) / 2 + var(--tile) * 0.4) / sin(var(--step)));
+    }
+  }
+  .cw-wheel {
+    position: absolute;
+    left: 50%;
+    top: calc(var(--top) + var(--fh) * 0.27 + var(--R));
+  }
+  .cw-tile {
+    position: absolute;
+    left: calc(var(--tile) / -2);
+    top: calc(var(--tile) / -2);
+    width: var(--tile);
+    height: var(--tile);
+    transform: rotate(calc(var(--i) * var(--step))) translateY(calc(var(--R) * -1));
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cw-tile-in {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: 24%;
+    background: #141111;
+    box-shadow:
+      0 0 0 1px rgb(255 248 238 / 0.16),
+      0 22px 44px -18px rgb(0 0 0 / 0.85);
+    transition:
+      scale 0.6s var(--ease-luxe),
+      box-shadow 0.6s var(--ease-luxe);
+  }
+  /* the tile's name, shown under the mouse */
+  .cw-tile-name {
+    position: absolute;
+    inset: auto 0 0;
+    padding: 1.6rem 0.5rem 0.55rem;
+    background: linear-gradient(0deg, rgb(0 0 0 / 0.75), transparent);
+    font-family: var(--font-heading);
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    line-height: 1.25;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.5s var(--ease-luxe);
+  }
+  .cw-tile:focus-visible {
+    outline: none;
+  }
+  .cw-tile:focus-visible .cw-tile-in {
+    box-shadow:
+      0 0 0 2px var(--color-brand-light),
+      0 22px 44px -18px rgb(0 0 0 / 0.85);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .cw-tile {
+      cursor: pointer;
+    }
+    .cw-tile:hover .cw-tile-in {
+      scale: 1.08;
+      box-shadow:
+        0 0 0 1px var(--color-brand),
+        0 26px 50px -18px rgb(0 0 0 / 0.9);
+    }
+    .cw-tile:hover .cw-tile-name {
+      opacity: 1;
+    }
+  }
+  /* The frame: just the photo, rounded, with a fine gold line round it and a soft shadow */
+  .cw-frame {
+    position: absolute;
+    top: var(--top);
+    left: calc(50% - var(--fw) / 2);
+    width: var(--fw);
+    height: var(--fh);
+    border-radius: calc(var(--fw) * 0.07);
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--color-brand) 55%, transparent),
+      0 50px 100px -40px rgb(0 0 0 / 0.95);
+  }
+  .cw-photo {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    border-radius: inherit;
+    background: #141111;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cw-photo:focus-visible {
+    outline: 2px solid var(--color-brand-light);
+    outline-offset: 3px;
+  }
+  .cw-layer {
+    position: absolute;
+    inset: 0;
+  }
+  /* (before the script runs, only the first photo shows) */
+  .cw-layer:not(:first-child) {
+    clip-path: circle(0% at 50% 28%);
+  }
+  .cw-layer img {
+    transition: filter 0.8s var(--ease-luxe);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .cw-photo:hover .cw-layer img {
+      filter: brightness(1.08);
+    }
+  }
+  .cw-shade {
+    background: linear-gradient(0deg, rgb(0 0 0 / 0.8) 0%, rgb(0 0 0 / 0.3) 30%, transparent 52%);
+    pointer-events: none;
+  }
+  /* The photo's light spilling onto the page: the same photo, blurred right down and faint */
+  .cw-amb {
+    opacity: 0;
+    transition: opacity 1.2s var(--ease-luxe);
+  }
+  .cw-amb[data-show] {
+    opacity: 0.4;
+  }
+  .cw-amb img {
+    scale: 1.3;
+    filter: blur(60px) saturate(1.4);
+  }
+  .cw-veil {
+    background:
+      radial-gradient(60% 50% at 50% 45%, transparent, rgb(11 10 10 / 0.75) 80%),
+      linear-gradient(180deg, rgb(11 10 10 / 0.7), transparent 25%, transparent 70%, rgb(11 10 10 / 0.85));
+  }
+  /* ── Gallery story page (CategoryStory.tsx): one couple's or family's story ── */
+  /* Shade on the cover photo, darker at the top for the menu and at the bottom for the names */
+  .sf-shade {
+    background:
+      linear-gradient(180deg, rgb(11 10 10 / 0.55) 0%, transparent 28%),
+      linear-gradient(0deg, rgb(11 10 10 / 0.9) 0%, rgb(11 10 10 / 0.45) 35%, transparent 62%);
+  }
+  /* The band behind their experience: a shade lighter than the page, warm at one corner */
+  .sf-band {
+    background:
+      radial-gradient(60% 80% at 0% 0%, color-mix(in oklab, var(--color-brand) 7%, transparent), transparent 70%),
+      #100d0c;
+  }
+  /* The full-screen viewer fades in, and each photo in it too */
+  @media (prefers-reduced-motion: no-preference) {
+    .sf-viewer {
+      animation: sf-fade 0.45s var(--ease-luxe) both;
+    }
+    .sf-view-photo {
+      animation: sf-fade 0.6s var(--ease-luxe) both;
+    }
+  }
+  .sf-viewer {
+    touch-action: none;
+  }
+
+  /* The kind's name in the frame comes in fresh each time the photo changes */
+  @media (prefers-reduced-motion: no-preference) {
+    .cw-cap {
+      animation: cw-cap 0.8s 0.25s var(--ease-luxe) both;
+    }
+  }
 }
 
 @layer components {
@@ -824,6 +1132,26 @@
   }
   to {
     background-position: 0% 0;
+  }
+}
+
+@keyframes sf-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes cw-cap {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+
+/* The gallery's band of shoot names: slides by one of its two copies, then starts over */
+@keyframes gc-band {
+  to {
+    translate: -50% 0;
   }
 }
 

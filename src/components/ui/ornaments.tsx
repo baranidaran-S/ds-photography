@@ -15,7 +15,8 @@ export function LotusMark({ className = "h-5 w-7" }: ClassProps) {
   );
 }
 
-/** Line-art mandala built from rings of petals and dots. */
+/** Line-art mandala built from rings of petals and dots. Only for the phone menu (Navbar):
+    the site doesn't use it anywhere else. */
 export function Mandala({ className = "" }: ClassProps) {
   const ring = (count: number, offset = 0) => Array.from({ length: count }, (_, i) => offset + (360 / count) * i);
   return (

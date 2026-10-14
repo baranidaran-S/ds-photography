@@ -7,6 +7,8 @@ const NAMES: Record<string, string> = {
   "contact-row": "Contact details",
   portfolio: "Album, last page",
   menu: "Phone menu",
+  gallery: "Gallery page",
+  "gallery-story": "Gallery story page",
   "floating-button": "Floating button",
 };
 

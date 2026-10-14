@@ -1,11 +1,11 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useId, useRef } from "react";
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
 import type { Service } from "@/content/site";
-import { useEnquiry } from "@/components/providers/SiteProvider";
-import { ChatIcon } from "@/components/ui/icons";
+import { ArrowIcon } from "@/components/ui/icons";
 import { LotusMark } from "@/components/ui/ornaments";
 import type { SectionHeading } from "@/content/db";
 
@@ -42,7 +42,6 @@ export function Services({
 }) {
   const root = useRef<HTMLElement>(null);
   const total = serviceDetails.length;
-  const enquire = useEnquiry();
   const goTo = useRef<(index: number) => void>(() => {});
   const maskId = `vf-iris-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
 
@@ -432,7 +431,7 @@ export function Services({
               </span>
             </div>
 
-            {/* Service name and enquiry */}
+            {/* Service name, and the way to the gallery */}
             <div className="absolute inset-x-0 bottom-0 z-20 p-6 pb-7 sm:max-w-[60%] sm:p-10 lg:p-12">
               <div className="grid">
                 {serviceDetails.map((s, i) => (
@@ -448,18 +447,15 @@ export function Services({
               </div>
               <div className="mt-5 grid justify-items-start">
                 {serviceDetails.map((s, i) => (
-                  <button
+                  <Link
                     key={s.name}
-                    type="button"
-                    onClick={() =>
-                      enquire({ source: `services:${s.name}`, eventType: s.name })
-                    }
+                    href="/gallery"
                     className={`vf-cta btn-brand btn-sm [grid-area:1/1] ${i ? "invisible" : ""}`}
-                    aria-label={`Enquire about ${s.name}`}
+                    aria-label="Explore the gallery"
                   >
-                    <ChatIcon className="size-4" />
-                    Enquire
-                  </button>
+                    Explore
+                    <ArrowIcon className="size-4" />
+                  </Link>
                 ))}
               </div>
             </div>

@@ -61,6 +61,12 @@ export function useAnchorScroll() {
       if (!href?.startsWith("#")) return;
       event.preventDefault();
       onDone?.();
+      // The sections live on the home page. From any other page (the gallery), go there and let
+      // SectionJump make the jump once the intro is in place, as it does for /?view=services.
+      if (window.location.pathname !== "/") {
+        window.location.assign(href === "#home" ? "/" : `/?view=${href.slice(1)}`);
+        return;
+      }
       jumpTo(href, lenis ?? undefined);
     },
     [lenis],

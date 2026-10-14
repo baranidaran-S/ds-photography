@@ -17,6 +17,7 @@ import {
   Story as StoryModel,
 } from "@/models";
 import { photos, type Photo } from "./photos";
+import { pageOfNames } from "./gallery";
 import * as fallback from "./site";
 import type {
   ChatMessage,
@@ -165,14 +166,17 @@ export function getStories(): Promise<Story[]> {
         .lean();
       return rows.map((r) => {
         const pair = Array.isArray(r.photos) ? r.photos : [];
+        const title = str(r.title);
         return {
           category: str(r.category),
-          title: str(r.title),
+          title,
           place: str(r.place),
           date: str(r.date),
           note: str(r.note),
           cover: toPhoto(r.cover),
           photos: [toPhoto(pair[0]), toPhoto(pair[1])] as [Photo, Photo],
+          // "See full story" opens the gallery page whose story (stories.ts) has these names
+          link: pageOfNames(title),
         };
       });
     },
