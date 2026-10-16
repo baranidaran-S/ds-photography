@@ -53,6 +53,15 @@ export async function kindPhotos(kind: string) {
   return { cover, photos: photos.filter((p): p is FolderPhoto => !!p) };
 }
 
+/** For the search: where a kind's cover photo is, and its page's top photo (hero.*, or else the
+    cover) with its size, so the search results can show it whole */
+export async function kindSearchPhotos(kind: string) {
+  const files = filesOf(kind);
+  const cover = files.find((f) => COVER.test(f));
+  const hero = files.find((f) => HERO.test(f)) ?? cover;
+  return { cover: cover && srcOf(kind, cover), hero: hero ? await measure(kind, hero) : undefined };
+}
+
 /** The shape (width ÷ height) of a photo in public/, as it shows; nothing if it can't be read
     (a photo from elsewhere carries its own) */
 async function shapeOf(src: string) {

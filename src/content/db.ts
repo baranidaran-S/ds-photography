@@ -388,7 +388,7 @@ export function getLogo() {
 }
 
 /* The album cover is decorative — it sits behind the stamped title — so it has no
-   alt of its own, and `showTitle` says whether the lotus and "Our Stories" are
+   alt of its own, and `showTitle` says whether the focus frame and "Our Stories" are
    drawn on top or already baked into the file. */
 const builtInAlbumCover = {
   ...photos.albumCover,

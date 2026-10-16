@@ -11,7 +11,7 @@ import { useEnquiry, useSite } from "@/components/providers/SiteProvider";
 import { useAnchorScroll } from "@/hooks/useAnchorScroll";
 import { Magnetic } from "@/components/ui/Magnetic";
 import { ArrowIcon, ChatIcon } from "@/components/ui/icons";
-import { LotusMark } from "@/components/ui/ornaments";
+import { FocusMark } from "@/components/ui/ornaments";
 import type { HeroCopy } from "@/content/db";
 
 const SLIDE_SECONDS = 5.5;
@@ -513,7 +513,7 @@ export function Hero({
         <div className="relative mx-auto flex w-full max-w-[1320px] flex-1 items-end px-5 pt-32 pb-20 sm:px-8 sm:pt-40 lg:items-center lg:px-12 lg:pt-36 lg:pb-16 [@media(min-width:1024px)_and_(max-height:820px)]:pt-28 [@media(min-width:1024px)_and_(max-height:820px)]:pb-10">
           <div className="hero-copy max-w-[780px]">
             <div data-reveal className="hero-ornament mb-6 hidden items-center gap-4 text-accent sm:flex">
-              <LotusMark className="h-6 w-8" />
+              <FocusMark className="h-6 w-8" />
               <span
                 aria-hidden
                 className="hero-ornament-line h-px w-16 origin-left bg-gradient-to-r from-accent to-transparent"

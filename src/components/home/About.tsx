@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRef } from "react";
 import { gsap, SplitText, useGSAP } from "@/lib/gsap";
-import { LotusMark } from "@/components/ui/ornaments";
+import { FocusMark } from "@/components/ui/ornaments";
 import type { SectionHeading } from "@/content/db";
 import type { Photo } from "@/content/photos";
 
@@ -182,7 +182,7 @@ export function About({
             the whole section fits in one screen) */}
         <div className="ab-story relative z-10 -mt-12 px-5 sm:px-8 lg:mt-0 lg:flex lg:flex-col lg:justify-center lg:px-[1.5cqw] lg:py-[3.6svh]">
           <p className="ab-eyebrow mb-6 flex lg:mb-[2.2svh] items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-brand-light uppercase">
-            <LotusMark className="h-4 w-6 text-accent" />
+            <FocusMark className="h-4 w-6 text-accent" />
             {meta.eyebrow}
             <span aria-hidden className="ab-eyebrow-line ml-3 h-px w-16 origin-left bg-brand/55" />
           </p>

@@ -7,7 +7,7 @@ import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import type { GalleryCategory } from "@/content/gallery";
 import { useEnquiry } from "@/components/providers/SiteProvider";
 import { ChatIcon } from "@/components/ui/icons";
-import { LotusMark } from "@/components/ui/ornaments";
+import { FocusMark } from "@/components/ui/ornaments";
 import { KindsBand } from "./KindsBand";
 import { followPointer } from "./pointer";
 import { PreloadPhotos, SCREENS } from "./preload";
@@ -170,9 +170,9 @@ export function GalleryRows({ categories }: { categories: GalleryCategory[] }) {
                   className="object-cover"
                 />
               ) : (
-                // no photo yet: a faint lotus
+                // no photo yet: a faint focus frame
                 <span className="absolute inset-0 grid place-items-center bg-[#ece3d4]">
-                  <LotusMark className="h-10 w-14 text-accent/30" />
+                  <FocusMark className="h-10 w-14 text-accent/30" />
                 </span>
               )}
             </span>
@@ -220,7 +220,7 @@ export function GalleryRows({ categories }: { categories: GalleryCategory[] }) {
       }`}
     >
       <span className={`flex gap-4 ${inRow ? "flex-col" : "items-center"}`}>
-        <LotusMark className="h-5 w-8 shrink-0 text-accent sm:h-6 sm:w-10" />
+        <FocusMark className="h-5 w-8 shrink-0 text-accent sm:h-6 sm:w-10" />
         <span className="block">
           <span className="block font-display text-[clamp(1.1rem,2vw,1.8rem)] leading-tight">
             Don&rsquo;t see your celebration?
@@ -250,7 +250,7 @@ export function GalleryRows({ categories }: { categories: GalleryCategory[] }) {
             <p
               className="gc-eyebrow rise-in mb-5 flex items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-accent-deep uppercase"
             >
-              <LotusMark className="h-4 w-6 text-accent" />
+              <FocusMark className="h-4 w-6 text-accent" />
               Our gallery
             </p>
             <h1

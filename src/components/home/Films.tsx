@@ -6,7 +6,7 @@ import { useLenis } from "lenis/react";
 import { gsap, SplitText, useGSAP } from "@/lib/gsap";
 import type { Film } from "@/content/site";
 import { ArrowIcon } from "@/components/ui/icons";
-import { LotusMark } from "@/components/ui/ornaments";
+import { FocusMark } from "@/components/ui/ornaments";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -315,7 +315,7 @@ export function Films({ films }: { films: FilmsBlock }) {
         <div className="fm-head mb-12 grid items-end gap-6 lg:mb-14 lg:grid-cols-[1.25fr_1fr]">
           <div>
             <p className="fm-eyebrow mb-5 flex items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-brand-light uppercase">
-              <LotusMark className="h-4 w-6 text-accent" />
+              <FocusMark className="h-4 w-6 text-accent" />
               {films.eyebrow}
             </p>
             <h2

@@ -41,7 +41,7 @@ export type Photo = {
 };
 
 /* ── 0. LOGO — centre of the menu bar ───────────────────────────────────────
-   Set `src` to "" to go back to the plain text logo (lotus · DS | PHOTOGRAPHY).
+   Set `src` to "" to go back to the plain text logo (focus frame · DS | PHOTOGRAPHY).
    The menu bar is dark, so use a PNG with a transparent background (or an SVG) in a light or
    gold colour. In public/images/logo, ds-final-mark.png is the final logo (camera + DS) with the
    empty space around it trimmed off.
@@ -299,7 +299,7 @@ const portfolio = {
    To use a photo of a real cover: save a SQUARE image of just the cover surface — straight on,
    edge to edge, no table or background around it — in public/images/portfolio/ and set `src`.
    The same image also lines the inside of the cover and the board edges, so the colours match.
-   showTitle → keep the gold lotus, border and "Our Stories" stamped on top of your image.
+   showTitle → keep the gold focus frame, border and "Our Stories" stamped on top of your image.
                Set to false if your image already has its own title or design.
    On phones the cover is a little wider than tall, so keep anything important away from the
    top and bottom edges. */

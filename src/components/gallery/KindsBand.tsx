@@ -1,5 +1,5 @@
 import type { GalleryCategory } from "@/content/gallery";
-import { LotusMark } from "@/components/ui/ornaments";
+import { FocusMark } from "@/components/ui/ornaments";
 
 /* Under the gallery tiles: every kind of shoot gliding past in two rows, the English names one
    way and the traditional ones (Valaikappu, Manjal Neerattu Vizha…) the other. Pure CSS
@@ -20,7 +20,7 @@ export function KindsBand({ categories }: { categories: GalleryCategory[] }) {
             {items.map((item) => (
               <li key={item} className="flex shrink-0 items-center">
                 <span className={className}>{item}</span>
-                <LotusMark className="mx-6 h-4 w-6 shrink-0 text-accent/80 sm:mx-9 sm:h-5 sm:w-7" />
+                <FocusMark className="mx-6 h-4 w-6 shrink-0 text-accent/80 sm:mx-9 sm:h-5 sm:w-7" />
               </li>
             ))}
           </ul>

@@ -4,7 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { whatsappLink } from "@/lib/whatsapp";
 import { prettyDate, todayISO } from "@/lib/eventDate";
 import { ChatIcon } from "@/components/ui/icons";
-import { LotusMark } from "@/components/ui/ornaments";
+import { FocusMark } from "@/components/ui/ornaments";
 
 export type EnquiryIntent = {
   /** Which button opened it — stored so you can see what draws enquiries. */
@@ -191,7 +191,7 @@ export function EnquiryModal({
         ) : (
           /* ── Form ── */
           <>
-            <LotusMark className="h-5 w-7 text-accent" />
+            <FocusMark className="h-5 w-7 text-accent" />
             <h2
               id={`${formId}-title`}
               className="mt-3 font-display text-[1.7rem] leading-tight"

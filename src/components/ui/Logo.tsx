@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { LotusMark } from "@/components/ui/ornaments";
+import { FocusMark } from "@/components/ui/ornaments";
 import { useSite } from "@/components/providers/SiteProvider";
 
 /** The word under the mark; it tucks away when the menu bar turns compact (see .site-logo-word in globals.css) */
@@ -18,7 +18,7 @@ function Word() {
 }
 
 /** Centred, stacked logo: the mark set in System Settings with PHOTOGRAPHY underneath.
-    Until a logo file is set, a text logo: lotus + DS. */
+    Until a logo file is set, a text logo: focus frame + DS. */
 export function Logo({ className = "" }: { className?: string }) {
   const { logo } = useSite();
 
@@ -44,7 +44,7 @@ export function Logo({ className = "" }: { className?: string }) {
   return (
     <span className={`flex flex-col items-center ${className}`}>
       <span className="flex items-center gap-2">
-        <LotusMark className="h-6 w-8 text-brand lg:h-7 lg:w-9" />
+        <FocusMark className="h-6 w-8 text-brand lg:h-7 lg:w-9" />
         <span className="font-heading text-[1.45rem] leading-none font-semibold tracking-[0.08em] lg:text-[1.7rem]">
           DS
         </span>

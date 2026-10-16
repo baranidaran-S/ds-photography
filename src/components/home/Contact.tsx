@@ -7,7 +7,7 @@ import type { Photo } from "@/content/photos";
 import { useEnquiry, useSite } from "@/components/providers/SiteProvider";
 import { Magnetic } from "@/components/ui/Magnetic";
 import { ArrowIcon, ChatIcon } from "@/components/ui/icons";
-import { LotusMark } from "@/components/ui/ornaments";
+import { FocusMark } from "@/components/ui/ornaments";
 import type { SectionHeading } from "@/content/db";
 
 // Soft out-of-focus light circles behind the section: [left %, top %, size rem, gold or red, drift seconds]
@@ -276,7 +276,7 @@ export function Contact({
         {/* Details */}
         <div>
           <p className="ct-eyebrow mb-5 flex items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-accent-deep uppercase">
-            <LotusMark className="h-4 w-6 text-accent" />
+            <FocusMark className="h-4 w-6 text-accent" />
             {meta.eyebrow}
           </p>
           <h2

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRef } from "react";
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
 import type { ChatMessage, Review } from "@/content/site";
-import { LotusMark } from "@/components/ui/ornaments";
+import { FocusMark } from "@/components/ui/ornaments";
 import type { SectionHeading } from "@/content/db";
 
 // Each screenshot sits at a slight angle, like prints laid on a table; hovering straightens it
@@ -335,7 +335,7 @@ export function Reviews({
       <div className="rv-head mx-auto grid max-w-[1320px] items-end gap-6 px-5 sm:px-8 lg:grid-cols-[1.25fr_1fr] lg:px-12">
         <div>
           <p className="rv-eyebrow mb-5 flex items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-accent-deep uppercase">
-            <LotusMark className="h-4 w-6 text-accent" />
+            <FocusMark className="h-4 w-6 text-accent" />
             {meta.eyebrow}
           </p>
           <h2

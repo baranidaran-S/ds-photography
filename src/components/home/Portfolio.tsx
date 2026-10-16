@@ -10,7 +10,7 @@ import type { Story } from "@/content/site";
 import type { Photo } from "@/content/photos";
 import { useEnquiry, useSite } from "@/components/providers/SiteProvider";
 import { ArrowIcon, ChatIcon } from "@/components/ui/icons";
-import { LotusMark } from "@/components/ui/ornaments";
+import { FocusMark } from "@/components/ui/ornaments";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
@@ -222,7 +222,7 @@ function CoverArt({ cover, copy }: { cover: AlbumCover; copy: PortfolioCopy }) {
             <span className="absolute inset-[6.6cqmin] border border-brand/30" />
           </div>
           <div className="pf-stamp relative flex flex-col items-center px-[8cqmin]">
-            <LotusMark className="h-[8cqmin] w-[11cqmin] text-brand" />
+            <FocusMark className="h-[8cqmin] w-[11cqmin] text-brand" />
             <p className="mt-[3.5cqmin] font-heading text-[clamp(0.5rem,2.6cqmin,0.8rem)] font-semibold tracking-[0.42em] text-brand-light/80 uppercase">
               {copy.albumBrand}
             </p>
@@ -256,7 +256,7 @@ function EndPage({
 }) {
   return (
     <div className="pf-paper flex flex-col items-center justify-center p-[7cqmin] text-center">
-      <LotusMark className="h-[6cqmin] w-[9cqmin] text-accent" />
+      <FocusMark className="h-[6cqmin] w-[9cqmin] text-accent" />
       <p className="mt-[3cqmin] font-heading text-[clamp(0.55rem,2.4cqmin,0.72rem)] font-semibold tracking-[0.3em] text-accent-deep uppercase">
         {copy.endEyebrow}
       </p>
@@ -728,7 +728,7 @@ export function Portfolio({
       <div className="pf-head mx-auto grid max-w-[1320px] items-end gap-6 px-5 pt-24 sm:px-8 lg:grid-cols-[1.25fr_1fr] lg:px-12 lg:pt-32">
         <div>
           <p className="pf-eyebrow mb-5 flex items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-accent-deep uppercase">
-            <LotusMark className="h-4 w-6 text-accent" />
+            <FocusMark className="h-4 w-6 text-accent" />
             {copy.eyebrow}
           </p>
           <h2

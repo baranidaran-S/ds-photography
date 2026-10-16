@@ -90,6 +90,20 @@ body:has(.light-page) .site-header [data-reveal] {
   }
 }
 
+/* The search panel (SearchProvider.tsx) drops in softly as it opens */
+@media (prefers-reduced-motion: no-preference) {
+  .sr-panel {
+    animation: sr-in 0.45s var(--ease-luxe) both;
+  }
+}
+@keyframes sr-in {
+  from {
+    opacity: 0;
+    translate: 0 -12px;
+    scale: 0.985;
+  }
+}
+
 @layer components {
   /* Flat brand-colour button; the hover colour fills up from the bottom */
   .btn-brand {
@@ -962,9 +976,10 @@ body:has(.light-page) .site-header [data-reveal] {
   .sf-facts {
     --sf-line: color-mix(in oklab, var(--color-brand) 70%, transparent);
   }
-  /* (the experience note's card has the same second hairline) */
+  /* (the experience note's card, and the search page's filters card, have the same second hairline) */
   .sf-facts::after,
-  .sf-note::after {
+  .sf-note::after,
+  .sr-filters::after {
     content: "";
     position: absolute;
     inset: 6px;

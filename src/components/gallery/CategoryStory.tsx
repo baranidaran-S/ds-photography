@@ -7,7 +7,7 @@ import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import type { ShownPhoto, StoryView } from "@/lib/storyView";
 import { useEnquiry } from "@/components/providers/SiteProvider";
 import { ArrowIcon } from "@/components/ui/icons";
-import { LotusMark } from "@/components/ui/ornaments";
+import { FocusMark } from "@/components/ui/ornaments";
 import { PhotoViewer } from "./PhotoViewer";
 import { SCREENS, warmPhotos } from "./preload";
 
@@ -270,7 +270,7 @@ export function CategoryStory({ view }: { view: StoryView }) {
         className={`grid place-items-center rounded-[10px] bg-[#ece3d4] ring-1 ring-ink/10 lg:rounded-[14px] ${className}`}
         style={{ aspectRatio: `${p.w} / ${p.h}` }}
       >
-        <LotusMark className="h-5 w-8 text-accent/30" />
+        <FocusMark className="h-5 w-8 text-accent/30" />
       </div>
     );
 
@@ -511,7 +511,7 @@ export function CategoryStory({ view }: { view: StoryView }) {
       {/* ── An invitation ── */}
       <section className="mx-auto max-w-[1320px] px-5 pt-24 pb-14 sm:px-8 lg:px-12 lg:pt-32 lg:pb-16">
         <div className="sf-rise gc-ask relative overflow-hidden rounded-[22px] px-6 py-14 text-center ring-1 ring-ink/10 sm:px-12 lg:py-20">
-          <LotusMark className="mx-auto mb-6 h-6 w-10 text-accent" />
+          <FocusMark className="mx-auto mb-6 h-6 w-10 text-accent" />
           <h2 className="font-display text-[clamp(2.2rem,5.4vw,4.6rem)] leading-[1.05]">
             Your story could be <span className="foil-deep">next</span>
           </h2>

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useMemo, useRef } from "react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import type { GalleryCategory, GallerySub } from "@/content/gallery";
-import { LotusMark } from "@/components/ui/ornaments";
+import { FocusMark } from "@/components/ui/ornaments";
 import { followPointer } from "./pointer";
 import { PreloadPhotos, SCREENS } from "./preload";
 
@@ -223,9 +223,9 @@ export function CategoryWall({
                   style={{ objectPosition: s.cover.position }}
                 />
               ) : (
-                // no photo yet: warm light in the dark and a faint lotus
+                // no photo yet: a faint focus frame
                 <span className="absolute inset-0 grid place-items-center bg-[#ece3d4]">
-                  <LotusMark className="h-10 w-14 text-accent/30" />
+                  <FocusMark className="h-10 w-14 text-accent/30" />
                 </span>
               )}
             </span>
@@ -275,7 +275,7 @@ export function CategoryWall({
             className="sw-eyebrow rise-in flex items-center gap-3 font-heading text-[0.66rem] font-semibold tracking-[0.3em] text-accent-deep uppercase sm:text-[0.72rem]"
             style={{ "--d": "0.06s" } as React.CSSProperties}
           >
-            <LotusMark className="h-4 w-6 text-accent" />
+            <FocusMark className="h-4 w-6 text-accent" />
             {pad(number)} / {pad(total)} &middot; {count} kinds of shoot
           </p>
           <h1

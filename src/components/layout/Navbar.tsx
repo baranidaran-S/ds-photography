@@ -8,7 +8,8 @@ import { useEnquiry, useSite } from "@/components/providers/SiteProvider";
 import { useAnchorScroll } from "@/hooks/useAnchorScroll";
 import { Logo } from "@/components/ui/Logo";
 import { Mandala } from "@/components/ui/ornaments";
-import { ChatIcon } from "@/components/ui/icons";
+import { ChatIcon, SearchIcon } from "@/components/ui/icons";
+import { prefetchSearch, useOpenSearch } from "@/components/providers/SearchProvider";
 
 // Computers: half the links left of the centred logo, the rest on the right
 const half = Math.ceil(navLinks.length / 2);
@@ -56,6 +57,7 @@ export function Navbar() {
 
   const lenis = useLenis();
   const enquire = useEnquiry();
+  const openSearch = useOpenSearch();
   const { services, site } = useSite();
 
   // Entrance: bar drops in with the hero intro
@@ -209,6 +211,20 @@ export function Navbar() {
                   </li>
                 ))}
               </ul>
+
+              {/* the gallery search (SearchProvider), on every page; tucked away while the phone menu is open */}
+              <button
+                type="button"
+                onClick={openSearch}
+                // (its list starts downloading as the pointer or a finger reaches the button)
+                onPointerEnter={prefetchSearch}
+                onPointerDown={prefetchSearch}
+                onFocus={prefetchSearch}
+                aria-label="Search the gallery"
+                className={`grid size-11 place-items-center transition-[color,opacity] duration-500 hover:text-brand-light lg:ml-6 xl:ml-9 ${open ? "pointer-events-none opacity-0" : ""}`}
+              >
+                <SearchIcon className="size-[1.2rem]" />
+              </button>
 
               <button
                 ref={toggleRef}

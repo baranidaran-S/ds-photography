@@ -6,7 +6,7 @@ import { useId, useRef } from "react";
 import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
 import type { Service } from "@/content/site";
 import { ArrowIcon } from "@/components/ui/icons";
-import { LotusMark } from "@/components/ui/ornaments";
+import { FocusMark } from "@/components/ui/ornaments";
 import type { SectionHeading } from "@/content/db";
 
 const SHOT_SECONDS = 3.5;
@@ -312,7 +312,7 @@ export function Services({
         <div className="svc-head mb-12 grid items-end gap-6 lg:mb-14 lg:grid-cols-[1.25fr_1fr]">
           <div>
             <p className="svc-eyebrow mb-5 flex items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-brand-light uppercase">
-              <LotusMark className="h-4 w-6 text-accent" />
+              <FocusMark className="h-4 w-6 text-accent" />
               {meta.eyebrow}
             </p>
             <h2

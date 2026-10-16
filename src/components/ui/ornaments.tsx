@@ -2,15 +2,25 @@
 
 type ClassProps = { className?: string };
 
-/** Five-petal lotus, used in the logo and as a divider. Colour follows `currentColor`. */
-export function LotusMark({ className = "h-5 w-7" }: ClassProps) {
-  const petal = "M16 22 C 12.2 15.5, 12.6 7.5, 16 2.5 C 19.4 7.5, 19.8 15.5, 16 22 Z";
+/** A camera's focus frame: viewfinder corners round the focus point, like the home page's
+    viewfinder. Used beside section labels, as a divider and in the text logo. Colour follows
+    `currentColor`. */
+export function FocusMark({ className = "h-5 w-7" }: ClassProps) {
   return (
-    <svg viewBox="0 0 32 25" fill="none" stroke="currentColor" strokeWidth="1.2" aria-hidden className={className}>
-      {[-58, -29, 0, 29, 58].map((deg) => (
-        <path key={deg} d={petal} transform={`rotate(${deg} 16 22)`} fill={deg === 0 ? "currentColor" : "none"} fillOpacity={0.25} />
-      ))}
-      <path d="M5 22.5 Q16 26 27 22.5" strokeLinecap="round" />
+    <svg
+      viewBox="0 0 32 25"
+      fill="none"
+      stroke="currentColor"
+      // (bold enough to draw a crisp line at the small sizes it's used, beside a label)
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={className}
+    >
+      <path d="M5 8.5V3.5H10M22 3.5H27V8.5M27 16.5V21.5H22M10 21.5H5V16.5" />
+      <circle cx="16" cy="12.5" r="3.6" fill="currentColor" fillOpacity={0.25} />
+      <circle cx="16" cy="12.5" r="1.2" fill="currentColor" stroke="none" />
     </svg>
   );
 }
