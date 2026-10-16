@@ -3,15 +3,18 @@
    ───────────────────────────────────────────────────────────────────────────
    PHOTOS: one folder for each kind of shoot. Nothing to change in this file:
      public/images/stories/<kind of shoot>/
-       cover.jpg          the big photo at the top (also its tile on the category page)
+       cover.jpg          its card on the category page (and the photo at the top of its own
+                          page, unless there's a hero.jpg)
+       hero.jpg           (if wanted) a different photo for the top of its own page
        01.jpg, 02.jpg, …  the photos, shown in name order
    Any shape works, and .jpg, .png and .webp all do. Add, swap or delete files and the page
    follows (the live site picks them up the next time it's published).
 
    WORDS: one block for each kind of shoot, below: their names, the date and place of the
-   shoot, and their experience in `description`. Anything left empty ("" or []) shows a
-   placeholder on the page instead. EVERYTHING BELOW IS DUMMY CONTENT for now (made-up names,
-   dates, places and words): replace it with real clients, with their permission.
+   shoot, their experience in `description`, and the photos they love most in `loved`.
+   Anything left empty ("" or []) shows a placeholder on the page instead. EVERYTHING BELOW IS
+   DUMMY CONTENT for now (made-up names, dates, places, words and favourites): replace it with
+   real clients, with their permission.
 
    A cover with `stock` is a free Pexels/Unsplash (or AI-made) stand-in: replace it with the
    studio's own photo before the site goes live, then delete its `stock` line.
@@ -27,6 +30,10 @@ export type StoryWords = {
         description: ["First paragraph.", "Second paragraph."],
       Leave it empty, [], until it's written. */
   description?: string[];
+  /** The photos they love most, shown after their experience: up to five, by number in the
+      photos' order (1 = the first photo, 01.jpg), e.g. loved: [2, 5, 1, 8, 3],
+      Leave it out, or [], and the section doesn't show. */
+  loved?: number[];
   /** About the cover photo: what it shows (for search engines and screen readers), the focus
       point "x% y%" that stays in view when it's cropped, and where a stand-in is from */
   cover?: { alt?: string; position?: string; stock?: string };
@@ -41,6 +48,7 @@ export const stories: Record<string, StoryWords> = {
       "Three weeks later the album arrived, and our parents went quiet turning the pages. Moments we never saw ourselves were all there: our fathers wiping their eyes, my little cousin asleep under the mandap.",
     ],
     names: "Ananya & Sourav",
+    loved: [3, 6, 2, 5, 1],
     date: "February 2025",
     place: "Kolkata",
     cover: {
@@ -54,6 +62,7 @@ export const stories: Record<string, StoryWords> = {
       "Our families come from two different traditions, and somehow every photo shows both. Even the priest asked for their number after the service.",
     ],
     names: "Priya & Daniel",
+    loved: [3, 6, 2, 5, 1],
     date: "April 2025",
     place: "Madurai",
     cover: {
@@ -80,6 +89,7 @@ export const stories: Record<string, StoryWords> = {
       "They also slipped away from the stage for the little moments: our grandparents dancing, our friends' speeches, and the two of us stealing a quiet minute together.",
     ],
     names: "Divya & Karthik",
+    loved: [4, 1, 6, 2, 5],
     date: "March 2025",
     place: "Madurai",
     cover: {
@@ -222,6 +232,7 @@ export const stories: Record<string, StoryWords> = {
       "Gokul usually hates photos, and even he loved how natural it all felt.",
     ],
     names: "Revathi & Gokul",
+    loved: [4, 1, 6, 2, 5],
     date: "March 2025",
     place: "Madurai",
     cover: {
@@ -234,6 +245,7 @@ export const stories: Record<string, StoryWords> = {
       "They were so patient with me, finding me a chair between rituals and never asking me to stand longer than I could.",
     ],
     names: "Meghna & Arijit",
+    loved: [2, 5, 1, 6, 3],
     date: "August 2025",
     place: "Bengaluru",
     cover: {
@@ -247,6 +259,7 @@ export const stories: Record<string, StoryWords> = {
       "Nothing was rushed. They waited through feeds and cuddles, and still left us with photos we will treasure forever.",
     ],
     names: "Baby Ved",
+    loved: [5, 2, 4, 1, 6],
     date: "March 2025",
     place: "Chennai",
     cover: {
@@ -260,6 +273,7 @@ export const stories: Record<string, StoryWords> = {
       "They were gentle around the baby and kept the flash away from her eyes. We could not have asked for more care.",
     ],
     names: "Baby Aadhira",
+    loved: [3, 6, 2, 5, 1],
     date: "January 2025",
     place: "Madurai",
     cover: {
@@ -313,6 +327,7 @@ export const stories: Record<string, StoryWords> = {
       "They caught the grown-ups too: grandparents dancing, friends laughing. It is the whole party in pictures, not just the cake.",
     ],
     names: "Myra turns one",
+    loved: [4, 1, 6, 2, 5],
     date: "June 2025",
     place: "Kochi",
     cover: {
@@ -338,6 +353,7 @@ export const stories: Record<string, StoryWords> = {
       "Every expression, from puzzled to delighted to covered in cream, is in the gallery.",
     ],
     names: "Baby Mithra",
+    loved: [4, 1, 6, 2, 5],
     date: "March 2025",
     place: "Madurai",
     cover: {
@@ -351,6 +367,7 @@ export const stories: Record<string, StoryWords> = {
       "We framed one of her in her silk pavadai for her grandparents, and they cried happy tears.",
     ],
     names: "Little Diya",
+    loved: [2, 5, 1, 6, 3],
     date: "January 2025",
     place: "Madurai",
     cover: {
@@ -365,6 +382,7 @@ export const stories: Record<string, StoryWords> = {
       "They captured the blessings from every elder, the turmeric bath, and the joy on her face in her first silk saree.",
     ],
     names: "Sowmya",
+    loved: [2, 5, 1, 6, 3],
     date: "June 2025",
     place: "Madurai",
     cover: {
@@ -379,6 +397,7 @@ export const stories: Record<string, StoryWords> = {
       "We now have a beautiful record of the day we moved into our dream home.",
     ],
     names: "The Krishnan family",
+    loved: [5, 2, 4, 1, 6],
     date: "April 2025",
     place: "Madurai",
     cover: {
@@ -392,6 +411,7 @@ export const stories: Record<string, StoryWords> = {
       "The photo of Appa tying the thali again, with all the grandchildren around them, is now in every one of our homes.",
     ],
     names: "Sundaram & Kamala",
+    loved: [1, 3, 5, 2, 4],
     date: "February 2025",
     place: "Karaikudi",
     cover: {
@@ -405,6 +425,7 @@ export const stories: Record<string, StoryWords> = {
       "We finally have a family portrait we are proud to hang in the living room.",
     ],
     names: "The Rajendran family",
+    loved: [2, 5, 1, 6, 3],
     date: "December 2024",
     place: "Madurai",
     cover: {
@@ -472,6 +493,7 @@ export const stories: Record<string, StoryWords> = {
       "We had edited highlights the next morning for our social media, and the full set within the week.",
     ],
     names: "Annual Leadership Meet",
+    loved: [5, 2, 4, 1, 6],
     date: "January 2025",
     place: "Madurai",
     cover: {
@@ -485,6 +507,7 @@ export const stories: Record<string, StoryWords> = {
       "They also captured the audience and the moments backstage, which made our programme booklet special.",
     ],
     names: "Margazhi Music Evening",
+    loved: [3, 6, 2, 5, 1],
     date: "December 2024",
     place: "Madurai",
     cover: {

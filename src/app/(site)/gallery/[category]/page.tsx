@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { galleryCategories } from "@/content/gallery";
 import { withCovers } from "@/lib/kindPhotos";
-import { CategoryWheel } from "@/components/gallery/CategoryWheel";
+import { CategoryWall } from "@/components/gallery/CategoryWall";
 
 // Only the categories listed in content/gallery.ts have pages; any other address is a 404
 export const dynamicParams = false;
@@ -29,10 +29,10 @@ export default async function CategoryPage({ params }: PageProps<"/gallery/[cate
   };
 
   return (
-    <CategoryWheel
+    <CategoryWall
       key={category}
-      // each kind's tile shows the cover photo from its folder
-      category={withCovers(galleryCategories[i])}
+      // each kind's card shows the cover photo from its folder, in that photo's own shape
+      category={await withCovers(galleryCategories[i])}
       number={i + 1}
       total={total}
       prev={near(i - 1)}

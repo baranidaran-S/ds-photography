@@ -13,6 +13,8 @@ export type GallerySub = {
   local?: string;
   /** Its folder's cover photo, filled in on the server (lib/kindPhotos.ts → withCovers) */
   cover?: Photo;
+  /** That photo's width ÷ height, filled in with it */
+  shape?: number;
 };
 
 export type GalleryCategory = {
@@ -21,8 +23,10 @@ export type GalleryCategory = {
   name: string;
   /** One line under the name on the category's page */
   intro: string;
-  /** The tile on the gallery page. An empty src shows it with "Photos coming soon". */
+  /** Its photo on the gallery page. An empty src shows it with "Photos coming soon". */
   cover: Photo;
+  /** That photo's width ÷ height, filled in on the server (lib/kindPhotos.ts → withShapes) */
+  shape?: number;
   subs: GallerySub[];
 };
 

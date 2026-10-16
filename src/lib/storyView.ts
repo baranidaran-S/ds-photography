@@ -27,6 +27,8 @@ export type StoryView = {
     description: string[];
     cover: ShownPhoto;
     photos: ShownPhoto[];
+    /** the photos they love most (up to five, from their photos); empty hides the section */
+    loved: ShownPhoto[];
   };
   /** the kinds either side of this one in its category */
   prev: { slug: string; name: string };
@@ -44,6 +46,9 @@ const FRAME_SHAPES: [number, number][] = [
   [4, 5],
   [3, 2],
 ];
+
+// How many of their most-loved photos the page shows
+const LOVED = 5;
 
 // Who a story is about, until the real names are in
 const NAMES: Record<string, string> = {
@@ -95,6 +100,12 @@ export async function storyView(
     ...p,
     alt: `${name}, ${kind.name}: photo ${i + 1}`,
   }));
+  // their favourites, by number in the photos' order (1 = the first); numbers past the last
+  // photo are skipped, and five at most
+  const loved = (words.loved ?? [])
+    .map((n) => photos[n - 1])
+    .filter((p): p is ShownPhoto => !!p)
+    .slice(0, LOVED);
   for (let i = photos.length; i < MIN_PHOTOS; i++) {
     const [w, h] = FRAME_SHAPES[i % FRAME_SHAPES.length];
     photos.push({ src: "", alt: "", w, h });
@@ -115,6 +126,7 @@ export async function storyView(
       description: words.description ?? [],
       cover,
       photos,
+      loved,
     },
     prev: near(index - 1),
     next: near(index + 1),

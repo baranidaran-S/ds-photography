@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { GalleryBento } from "@/components/gallery/GalleryBento";
+import { GalleryRows } from "@/components/gallery/GalleryRows";
 import { galleryCategories } from "@/content/gallery";
+import { withShapes } from "@/lib/kindPhotos";
 
 export const metadata: Metadata = {
   title: "Gallery | DS Photography",
 };
 
-/* Gallery: every category as a tile in a bento grid. Each one opens its category, then its
-   kinds of shoots, then a couple or family's story. */
-export default function GalleryPage() {
-  return <GalleryBento categories={galleryCategories} />;
+/* Gallery: every category in even rows of whole photos. Each one opens its category, then
+   its kinds of shoots, then a couple or family's story. */
+export default async function GalleryPage() {
+  return <GalleryRows categories={await withShapes(galleryCategories)} />;
 }

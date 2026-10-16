@@ -32,18 +32,21 @@ export type PortfolioCopy = {
   reservedTitle: string;
 };
 
-// A turning paper page is drawn as this many narrow strips hinged together, so it can bend
-const CURL_STRIPS = 8;
+// A turning paper page is drawn as this many narrow strips hinged together, so it can bend. Each
+// strip carries a copy of the page, so fewer strips keep the album light; four still curve smoothly
+const CURL_STRIPS = 4;
 
-// Bending pages are added in the browser only, and not when the visitor prefers less motion
+// Bending pages are added in the browser only: not when the visitor prefers less motion, and not
+// on phones (held either way), where the pages turn in one piece, shading as they go, to stay smooth
 const REDUCE = "(prefers-reduced-motion: reduce)";
+const PHONE = "(max-width: 767px), (max-height: 500px)";
 const subscribeMotion = (onChange: () => void) => {
-  const m = window.matchMedia(REDUCE);
-  m.addEventListener("change", onChange);
-  return () => m.removeEventListener("change", onChange);
+  const queries = [REDUCE, PHONE].map((q) => window.matchMedia(q));
+  queries.forEach((m) => m.addEventListener("change", onChange));
+  return () => queries.forEach((m) => m.removeEventListener("change", onChange));
 };
-const motionAllowed = () => !window.matchMedia(REDUCE).matches;
-
+const motionAllowed = () =>
+  !window.matchMedia(REDUCE).matches && !window.matchMedia(PHONE).matches;
 const spreadLabel = (k: number, stories: Story[]) => {
   const total = stories.length;
   if (k === 0)
@@ -111,9 +114,11 @@ function StoryPage({ story, index }: PageProps) {
         {story.note}
       </p>
       {/* their page in the gallery, with all the photos and their words */}
+      {/* (not fetched ahead: the gallery pages would all start downloading as the album opens) */}
       {story.link && (
         <Link
           href={story.link}
+          prefetch={false}
           className="group mt-[3cqmin] inline-flex w-fit shrink-0 items-center gap-[0.7em] rounded-[2px] border border-accent-deep/45 px-[1.3em] py-[0.85em] font-heading text-[clamp(0.56rem,2.3cqw,0.72rem)] font-bold tracking-[0.16em] text-accent-deep uppercase transition-colors duration-500 hover:border-accent-deep hover:bg-accent-deep hover:text-cream focus-visible:border-accent-deep focus-visible:bg-accent-deep focus-visible:text-cream landscape:mt-[3.5cqw]"
         >
           See full story
@@ -334,7 +339,7 @@ export function Portfolio({
     () => false,
   );
   // The open spread: only the two pages that can turn from it keep a bending copy, which keeps the
-  // page light (each copy repeats a whole page eight times)
+  // page light (each copy repeats a whole page once per strip, on both sides)
   const [spread, setSpread] = useState(0);
 
   useGSAP(
@@ -503,8 +508,15 @@ export function Portfolio({
             const { strips, shades, casts } = rigOf(i);
             if (!strips.length || p <= 0 || p >= 1) {
               leaf.removeAttribute("data-curl");
-              // without strips (less motion) the page simply turns in one piece
-              turnStiff(leaf, strips.length ? (p >= 1 ? 180 : 0) : 180 * p);
+              // without strips (phones, less motion) the page simply turns in one piece, darkening
+              // as it turns away from the light like the bending strips do
+              const deg = strips.length ? (p >= 1 ? 180 : 0) : 180 * p;
+              turnStiff(leaf, deg);
+              const tint = dark(deg);
+              for (const side of ["front", "back"] as const) {
+                const s = shade(i, side);
+                if (s) s.style.opacity = tint;
+              }
               return;
             }
             if (!leaf.hasAttribute("data-curl")) {

@@ -31,14 +31,14 @@ export function KindsBand({ categories }: { categories: GalleryCategory[] }) {
 
   return (
     <section aria-label="Every kind of shoot we cover" className="gc-band mt-20 lg:mt-28">
-      <p className="mb-8 text-center font-mono text-[0.64rem] tracking-[0.22em] text-cream/50 uppercase">
+      <p className="mb-8 text-center font-mono text-[0.64rem] tracking-[0.22em] text-ink/50 uppercase">
         Every kind of shoot we cover
       </p>
-      <div className="space-y-3 border-y border-cream/10 py-7 sm:space-y-4 sm:py-9">
-        {row(names, "font-display text-[clamp(1.7rem,3.8vw,3.4rem)] leading-[1.15] whitespace-nowrap text-cream/90")}
+      <div className="space-y-3 border-y border-ink/10 py-7 sm:space-y-4 sm:py-9">
+        {row(names, "font-display text-[clamp(1.7rem,3.8vw,3.4rem)] leading-[1.15] whitespace-nowrap text-ink/85")}
         {row(
           traditional,
-          "foil font-display text-[clamp(1.35rem,2.8vw,2.5rem)] leading-[1.2] whitespace-nowrap",
+          "foil-deep font-display text-[clamp(1.35rem,2.8vw,2.5rem)] leading-[1.2] whitespace-nowrap",
           true,
         )}
       </div>

@@ -5,12 +5,14 @@ import type { GalleryCategory } from "@/content/gallery";
 import { stories } from "@/content/stories";
 
 /* Each kind of shoot's photos come from its own folder, public/images/stories/<kind>/:
-   cover.jpg (or .png, .webp) is the big photo, and every other photo there is shown in name
-   order (01, 02, … 10 comes after 9). Read on the server whenever a page is built. */
+   cover.jpg (or .png, .webp) is its card on the category page, hero.jpg (if there is one) opens
+   its own page (otherwise the cover does), and every other photo there is shown in name order
+   (01, 02, … 10 comes after 9). Read on the server whenever a page is built. */
 
 const FOLDER = path.join(process.cwd(), "public", "images", "stories");
 const IMAGE = /\.(jpe?g|png|webp|avif)$/i;
 const COVER = /^cover\./i;
+const HERO = /^hero\./i;
 
 export type FolderPhoto = { src: string; w: number; h: number };
 
@@ -39,30 +41,48 @@ async function measure(kind: string, file: string): Promise<FolderPhoto> {
   return { src: srcOf(kind, file), w: turned ? h : w, h: turned ? w : h };
 }
 
-/** A kind's cover file, if its folder has one */
-export function coverSrc(kind: string) {
-  const file = filesOf(kind).find((f) => COVER.test(f));
-  return file ? srcOf(kind, file) : undefined;
-}
-
-/** A kind's cover and its other photos, each with its shape */
+/** A kind's page photo (its hero, or else its cover) and its other photos, each with its shape */
 export async function kindPhotos(kind: string) {
   const files = filesOf(kind);
-  const coverFile = files.find((f) => COVER.test(f));
+  const heroFile = files.find((f) => HERO.test(f)) ?? files.find((f) => COVER.test(f));
   const [cover, ...photos] = await Promise.all(
-    [coverFile, ...files.filter((f) => f !== coverFile)].map((f) => (f ? measure(kind, f) : undefined)),
+    [heroFile, ...files.filter((f) => !HERO.test(f) && !COVER.test(f))].map((f) =>
+      f ? measure(kind, f) : undefined,
+    ),
   );
   return { cover, photos: photos.filter((p): p is FolderPhoto => !!p) };
 }
 
-/** A category with each kind's cover photo filled in from its folder (for the category page) */
-export function withCovers(category: GalleryCategory): GalleryCategory {
-  return {
-    ...category,
-    subs: category.subs.map((s) => {
-      const src = coverSrc(s.slug);
+/** The shape (width ÷ height) of a photo in public/, as it shows; nothing if it can't be read
+    (a photo from elsewhere carries its own) */
+async function shapeOf(src: string) {
+  if (!src.startsWith("/")) return undefined;
+  const m = await sharp(path.join(process.cwd(), "public", decodeURIComponent(src)))
+    .metadata()
+    .catch(() => undefined);
+  if (!m?.width || !m.height) return undefined;
+  return (m.orientation ?? 1) >= 5 ? m.height / m.width : m.width / m.height;
+}
+
+/** Every category with its cover photo's shape, so the gallery page can show each one whole
+    (GalleryRows) */
+export async function withShapes(categories: GalleryCategory[]): Promise<GalleryCategory[]> {
+  return Promise.all(
+    categories.map(async (c) => (c.cover.src && !c.shape ? { ...c, shape: await shapeOf(c.cover.src) } : c)),
+  );
+}
+
+/** A category with each kind's cover photo filled in from its folder, and its shape, so the
+    category page can show each one whole (CategoryWall) */
+export async function withCovers(category: GalleryCategory): Promise<GalleryCategory> {
+  const subs = await Promise.all(
+    category.subs.map(async (s) => {
+      const file = filesOf(s.slug).find((f) => COVER.test(f));
+      if (!file) return s;
+      const { src, w, h } = await measure(s.slug, file);
       const about = stories[s.slug]?.cover;
-      return src ? { ...s, cover: { src, alt: about?.alt ?? s.name, position: about?.position } } : s;
+      return { ...s, cover: { src, alt: about?.alt ?? s.name, position: about?.position }, shape: w / h };
     }),
-  };
+  );
+  return { ...category, subs };
 }
