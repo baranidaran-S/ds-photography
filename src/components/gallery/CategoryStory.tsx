@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
+import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import type { ShownPhoto, StoryView } from "@/lib/storyView";
 import { useEnquiry } from "@/components/providers/SiteProvider";
 import { ArrowIcon } from "@/components/ui/icons";
@@ -120,20 +120,10 @@ export function CategoryStory({ view }: { view: StoryView }) {
       const q = gsap.utils.selector(el);
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      gsap.set(q("[data-reveal]"), { autoAlpha: 1 });
+      // (arriving, the photo, their names and the facts rise in by themselves from the CSS,
+      // .rise-in, so they show without waiting for this)
       window.__dsReady = true;
       if (reduce) return;
-
-      /* ── Arriving: the photo settles into the band, their names rise, the facts lift in ── */
-      const split = SplitText.create(q(".sf-names"), { type: "words", mask: "words" });
-      gsap.set(split.masks, { paddingBottom: "0.14em", marginBottom: "-0.14em" });
-      gsap
-        .timeline({ delay: 0.1, defaults: { ease: "expo.out" } })
-        .from(q(".sf-hero-bg"), { autoAlpha: 0, duration: 1.6 }, 0)
-        .from(q(".sf-hero-photo"), { autoAlpha: 0, scale: 0.94, y: 24, duration: 1.6 }, 0.1)
-        .from(q(".sf-crumbs"), { autoAlpha: 0, y: 14, duration: 0.9 }, 0.4)
-        .from(split.words, { yPercent: 115, duration: 1.3, stagger: 0.1 }, 0.5)
-        .from(q(".sf-facts"), { autoAlpha: 0, y: 40, duration: 1.2 }, 0.8);
 
       /* ── The first photos and the text float up as they come into view (photos added later
          by "Show more" float in by themselves: .sf-pop). Only the photos showing on this screen:
@@ -293,12 +283,14 @@ export function CategoryStory({ view }: { view: StoryView }) {
       >
         {/* (the band clips the silk, not the photo, so the photo's shadow falls softly onto the page) */}
         <div aria-hidden className="absolute inset-0 overflow-hidden">
+          {/* (the largest thing on the first screen, so it's asked for first and shows as it lands) */}
           <Image
             src="/images/gallery/event-bg.jpg"
             alt=""
             fill
             sizes="100vw"
             loading="eager"
+            fetchPriority="high"
             className="sf-hero-bg object-cover"
           />
         </div>
@@ -306,8 +298,7 @@ export function CategoryStory({ view }: { view: StoryView }) {
         {/* (starts a clear gap below the menu bar: 99px tall, 120px on computers) */}
         <div className="sf-hero-stage absolute inset-x-4 top-30 bottom-4 sm:inset-x-8 sm:top-32 sm:bottom-6 lg:top-38">
           <div
-            data-reveal
-            className="sf-hero-photo relative overflow-hidden rounded-[12px] shadow-[0_30px_70px_-30px_rgb(60_30_15/0.6)] ring-1 ring-ink/10 lg:rounded-[16px]"
+            className="sf-hero-photo rise-in relative overflow-hidden rounded-[12px] shadow-[0_30px_70px_-30px_rgb(60_30_15/0.6)] ring-1 ring-ink/10 lg:rounded-[16px]"
           >
             <Image
               src={story.cover.src}
@@ -327,8 +318,8 @@ export function CategoryStory({ view }: { view: StoryView }) {
       <section className="mx-auto max-w-[1180px] px-4 pt-8 text-center sm:px-8 lg:pt-12">
         <nav
           aria-label="Breadcrumb"
-          data-reveal
-          className="sf-crumbs flex flex-wrap items-center justify-center gap-2.5 font-mono text-[0.62rem] tracking-[0.18em] text-ink/55 uppercase"
+          className="sf-crumbs rise-in flex flex-wrap items-center justify-center gap-2.5 font-mono text-[0.62rem] tracking-[0.18em] text-ink/55 uppercase"
+          style={{ "--d": "0.3s" } as React.CSSProperties}
         >
           <Link href="/gallery" className="transition-colors hover:text-accent-deep">
             Gallery
@@ -344,15 +335,15 @@ export function CategoryStory({ view }: { view: StoryView }) {
         </nav>
         <h1
           id="sf-names"
-          data-reveal
-          className="sf-names mt-5 font-display text-[clamp(2.6rem,8vw,6.5rem)] leading-[1]"
+          className="sf-names rise-in mt-5 font-display text-[clamp(2.6rem,8vw,6.5rem)] leading-[1]"
+          style={{ "--d": "0.4s" } as React.CSSProperties}
         >
           {story.names}
         </h1>
         {/* (like a printed invitation: a gold double edge, each fact under its own little seal) */}
         <dl
-          data-reveal
-          className="sf-facts relative mt-10 grid grid-cols-2 rounded-[22px] bg-[#fffdf8] shadow-[0_30px_60px_-34px_rgb(60_30_15/0.45)] ring-1 ring-brand/50 sm:grid-cols-3 lg:mt-12"
+          className="sf-facts rise-in relative mt-10 grid grid-cols-2 rounded-[22px] bg-[#fffdf8] shadow-[0_30px_60px_-34px_rgb(60_30_15/0.45)] ring-1 ring-brand/50 sm:grid-cols-3 lg:mt-12"
+          style={{ "--d": "0.55s" } as React.CSSProperties}
         >
           {(
             [

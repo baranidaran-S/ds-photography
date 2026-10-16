@@ -78,6 +78,8 @@ export function Navbar() {
 
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
+        // (the gallery's light pages show the bar from the start: globals.css → .rise-in)
+        if (document.querySelector(".light-page")) return;
         gsap.fromTo(
           barRef.current,
           { yPercent: -120, autoAlpha: 0 },

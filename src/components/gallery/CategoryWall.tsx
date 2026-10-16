@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useRef } from "react";
-import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
+import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import type { GalleryCategory, GallerySub } from "@/content/gallery";
 import { LotusMark } from "@/components/ui/ornaments";
 import { followPointer } from "./pointer";
@@ -119,20 +119,21 @@ export function CategoryWall({
       const el = root.current;
       if (!el) return;
       const q = gsap.utils.selector(el);
-      const items = q<HTMLElement>(".sw-item");
+      // (the top card of each column rises in by itself from the CSS, .rise-in, so the first photos
+      // show without waiting for this; the rest float up as they come into view)
+      const all = q<HTMLElement>(".sw-item");
+      const items = all.filter((c) => !c.classList.contains("rise-in"));
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      // the cards start hidden, then everything waiting on [data-reveal] is handed to GSAP
-      if (!reduce) gsap.set(items, { autoAlpha: 0, y: 60, scale: 0.94 });
-      gsap.set(q("[data-reveal]:not(.sw-item)"), { autoAlpha: 1 });
-      if (reduce) gsap.set(items, { autoAlpha: 1 });
+      // those cards start hidden ([data-reveal]), then GSAP takes them over
+      if (items.length) gsap.set(items, reduce ? { autoAlpha: 1 } : { autoAlpha: 0, y: 60, scale: 0.94 });
       window.__dsReady = true;
 
       /* ── Touch screens have no hover: the card crossing the middle of the screen lights up as
          if it were hovered ── */
       const mm = gsap.matchMedia();
       mm.add("(hover: none), (pointer: coarse)", () => {
-        items.forEach((c) =>
+        all.forEach((c) =>
           ScrollTrigger.create({
             trigger: c,
             start: "top 50%",
@@ -140,17 +141,9 @@ export function CategoryWall({
             onToggle: (self) => c.toggleAttribute("data-lit", self.isActive),
           }),
         );
-        return () => items.forEach((c) => c.removeAttribute("data-lit"));
+        return () => all.forEach((c) => c.removeAttribute("data-lit"));
       });
       if (reduce) return;
-
-      /* ── Heading rises ── */
-      const split = SplitText.create(q(".sw-name"), { type: "words", mask: "words" });
-      gsap.set(split.masks, { paddingBottom: "0.12em", marginBottom: "-0.12em" });
-      gsap
-        .timeline({ delay: 0.15, defaults: { ease: "expo.out" } })
-        .from(q(".sw-crumbs, .sw-eyebrow"), { autoAlpha: 0, y: 14, duration: 0.9, stagger: 0.08 }, 0)
-        .from(split.words, { yPercent: 115, duration: 1.2, stagger: 0.08 }, 0.15);
 
       /* ── Cards float up into place as they come into view, the photos settling inside ── */
       const reveal = (batch: Element[]) =>
@@ -201,19 +194,21 @@ export function CategoryWall({
     { scope: root },
   );
 
-  const card = (s: GallerySub, i: number, sizes: string) => (
+  // (the top row rises in from the CSS as the page arrives, each card `delay` seconds after it)
+  const card = (s: GallerySub, i: number, sizes: string, delay?: number) => (
     <li key={s.slug}>
       <Link
         href={`/gallery/${category.slug}/${s.slug}`}
-        data-reveal
+        data-reveal={delay === undefined ? true : undefined}
         onPointerMove={followPointer}
-        className="sw-item group block"
+        className={`sw-item group block ${delay === undefined ? "" : "rise-in"}`}
+        style={delay === undefined ? undefined : ({ "--d": `${delay}s` } as React.CSSProperties)}
       >
         <span
           className="gc-tile relative block overflow-hidden rounded-[16px] bg-[#e7ddcc] shadow-[0_22px_44px_-26px_rgb(60_30_15/0.55)] ring-1 ring-ink/10 md:rounded-[20px] md:group-hover:-translate-y-1"
           style={{ aspectRatio: shapeOf(s) }}
         >
-          <span className="sw-photo absolute inset-0">
+          <span className={`sw-photo absolute inset-0 ${delay === undefined ? "" : "rise-photo"}`}>
             <span className="absolute inset-0 transition-[scale] duration-[1.4s] ease-luxe group-hover:scale-[1.05] group-data-lit:scale-[1.05]">
               {s.cover?.src ? (
                 <Image
@@ -266,8 +261,7 @@ export function CategoryWall({
         <header>
           <nav
             aria-label="Breadcrumb"
-            data-reveal
-            className="sw-crumbs mb-3 flex items-center gap-2.5 font-mono text-[0.62rem] tracking-[0.18em] text-ink/55 uppercase lg:mb-4"
+            className="sw-crumbs rise-in mb-3 flex items-center gap-2.5 font-mono text-[0.62rem] tracking-[0.18em] text-ink/55 uppercase lg:mb-4"
           >
             <Link href="/gallery" className="transition-colors hover:text-accent-deep">
               Gallery
@@ -278,16 +272,16 @@ export function CategoryWall({
             </span>
           </nav>
           <p
-            data-reveal
-            className="sw-eyebrow flex items-center gap-3 font-heading text-[0.66rem] font-semibold tracking-[0.3em] text-accent-deep uppercase sm:text-[0.72rem]"
+            className="sw-eyebrow rise-in flex items-center gap-3 font-heading text-[0.66rem] font-semibold tracking-[0.3em] text-accent-deep uppercase sm:text-[0.72rem]"
+            style={{ "--d": "0.06s" } as React.CSSProperties}
           >
             <LotusMark className="h-4 w-6 text-accent" />
             {pad(number)} / {pad(total)} &middot; {count} kinds of shoot
           </p>
           <h1
             id="sw-name"
-            data-reveal
-            className="sw-name mt-4 font-display text-[clamp(2.8rem,9vw,7rem)] leading-[1.02] lg:mt-5"
+            style={{ "--d": "0.12s" } as React.CSSProperties}
+            className="sw-name rise-in mt-4 font-display text-[clamp(2.8rem,9vw,7rem)] leading-[1.02] lg:mt-5"
           >
             {category.name}
           </h1>
@@ -316,7 +310,7 @@ export function CategoryWall({
                   // every other column starts lower (a share of the row, so of a column's width)
                   style={c % 2 ? { paddingTop: `${(LOWER * 100) / l.cols}%` } : undefined}
                 >
-                  {column.map((i) => card(kinds[i], i, l.sizes))}
+                  {column.map((i, r) => card(kinds[i], i, l.sizes, r === 0 ? 0.3 + c * 0.09 : undefined))}
                 </ul>
               ))}
             </div>

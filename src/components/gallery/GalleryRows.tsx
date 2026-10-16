@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useMemo, useRef } from "react";
-import { gsap, ScrollTrigger, SplitText, useGSAP } from "@/lib/gsap";
+import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
 import type { GalleryCategory } from "@/content/gallery";
 import { useEnquiry } from "@/components/providers/SiteProvider";
 import { ChatIcon } from "@/components/ui/icons";
@@ -88,25 +88,25 @@ export function GalleryRows({ categories }: { categories: GalleryCategory[] }) {
       if (!el) return;
       const q = gsap.utils.selector(el);
       // (only the rows showing on this screen; the other screen sizes' rows are simply there, in
-      // case the screen turns)
-      const items = q<HTMLElement>(".gr-item").filter((t) => t.offsetParent);
+      // case the screen turns). The first row rises in by itself from the CSS (.rise-in), so the
+      // top photos show without waiting for this; the rest float up as they come into view
+      const showing = q<HTMLElement>(".gr-item").filter((t) => t.offsetParent);
+      const items = showing.filter((t) => !t.classList.contains("rise-in"));
       gsap.set(
         q<HTMLElement>(".gr-item").filter((t) => !t.offsetParent),
         { autoAlpha: 1 },
       );
 
-      // the cards start hidden, then everything waiting on [data-reveal] is handed to GSAP
+      // those cards start hidden ([data-reveal]), then GSAP takes them over
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (!reduce) gsap.set(items, { autoAlpha: 0, y: 40 });
-      gsap.set(q("[data-reveal]:not(.gr-item)"), { autoAlpha: 1 });
-      if (reduce) gsap.set(items, { autoAlpha: 1 });
+      if (items.length) gsap.set(items, reduce ? { autoAlpha: 1 } : { autoAlpha: 0, y: 40 });
       window.__dsReady = true;
 
       /* ── Touch screens have no hover: the card crossing the middle of the screen lights up as
          if it were hovered (the group-data-lit classes below, and globals.css) ── */
       const mm = gsap.matchMedia();
       mm.add("(hover: none), (pointer: coarse)", () => {
-        items.forEach((t) =>
+        showing.forEach((t) =>
           ScrollTrigger.create({
             trigger: t,
             start: "top 55%",
@@ -114,23 +114,9 @@ export function GalleryRows({ categories }: { categories: GalleryCategory[] }) {
             onToggle: (self) => t.toggleAttribute("data-lit", self.isActive),
           }),
         );
-        return () => items.forEach((t) => t.removeAttribute("data-lit"));
+        return () => showing.forEach((t) => t.removeAttribute("data-lit"));
       });
       if (reduce) return;
-
-      /* ── Heading rises, as in every section of the site ── */
-      const split = SplitText.create(q(".gc-title"), {
-        type: "words",
-        mask: "words",
-        ignore: q(".gc-foil-mask"),
-      });
-      gsap.set(split.masks, { paddingBottom: "0.12em", marginBottom: "-0.12em" });
-      gsap
-        .timeline({ delay: 0.2, defaults: { ease: "expo.out" } })
-        .from(q(".gc-eyebrow"), { autoAlpha: 0, y: 16, duration: 0.9 }, 0)
-        .from(split.words, { yPercent: 115, duration: 1.1, stagger: 0.07 }, 0.1)
-        .from(q(".gc-foil"), { yPercent: 115, duration: 1.1 }, 0.38)
-        .from(q(".gc-intro"), { autoAlpha: 0, y: 20, duration: 1 }, 0.4);
 
       /* ── Cards float up into place as they come into view, the photos settling inside them ── */
       const reveal = (batch: Element[]) =>
@@ -156,14 +142,21 @@ export function GalleryRows({ categories }: { categories: GalleryCategory[] }) {
     { scope: root },
   );
 
-  const card = (c: GalleryCategory, i: number, sizes: string) => (
+  // (the first row rises in from the CSS as the page arrives, each card `delay` seconds after it)
+  const card = (c: GalleryCategory, i: number, sizes: string, delay?: number) => (
     <li key={c.slug} style={{ "--r": shapeOf(c) } as React.CSSProperties}>
-      <Link href={`/gallery/${c.slug}`} data-reveal onPointerMove={followPointer} className="gr-item group block">
+      <Link
+        href={`/gallery/${c.slug}`}
+        data-reveal={delay === undefined ? true : undefined}
+        onPointerMove={followPointer}
+        className={`gr-item group block ${delay === undefined ? "" : "rise-in"}`}
+        style={delay === undefined ? undefined : ({ "--d": `${delay}s` } as React.CSSProperties)}
+      >
         <span
           className="gc-tile relative block overflow-hidden rounded-[14px] bg-[#e7ddcc] shadow-[0_22px_44px_-26px_rgb(60_30_15/0.55)] ring-1 ring-ink/10 md:rounded-[18px] md:group-hover:-translate-y-1"
           style={{ aspectRatio: shapeOf(c) }}
         >
-          <span className="gr-photo absolute inset-0">
+          <span className={`gr-photo absolute inset-0 ${delay === undefined ? "" : "rise-photo"}`}>
             <span className="absolute inset-0 transition-[scale] duration-[1.4s] ease-luxe group-hover:scale-[1.05] group-data-lit:scale-[1.05]">
               {c.cover.src ? (
                 <Image
@@ -255,26 +248,22 @@ export function GalleryRows({ categories }: { categories: GalleryCategory[] }) {
         <header className="mb-12 grid items-end gap-6 px-1 sm:px-0 lg:mb-16 lg:grid-cols-[1.25fr_1fr]">
           <div>
             <p
-              data-reveal
-              className="gc-eyebrow mb-5 flex items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-accent-deep uppercase"
+              className="gc-eyebrow rise-in mb-5 flex items-center gap-3 font-heading text-[0.72rem] font-semibold tracking-[0.3em] text-accent-deep uppercase"
             >
               <LotusMark className="h-4 w-6 text-accent" />
               Our gallery
             </p>
             <h1
               id="gallery-title"
-              data-reveal
-              className="gc-title font-display text-[clamp(2.4rem,5vw,4.6rem)] leading-[1.06]"
+              className="gc-title rise-in font-display text-[clamp(2.4rem,5vw,4.6rem)] leading-[1.06]"
+              style={{ "--d": "0.08s" } as React.CSSProperties}
             >
-              Every celebration, beautifully{" "}
-              <span className="gc-foil-mask -mb-[0.12em] inline-block overflow-hidden pb-[0.12em] align-bottom">
-                <span className="gc-foil foil-deep inline-block">framed</span>
-              </span>
+              Every celebration, beautifully <span className="foil-deep">framed</span>
             </h1>
           </div>
           <p
-            data-reveal
-            className="gc-intro max-w-[44ch] text-[1rem] leading-[1.8] text-ink/65 lg:justify-self-end"
+            className="gc-intro rise-in max-w-[44ch] text-[1rem] leading-[1.8] text-ink/65 lg:justify-self-end"
+            style={{ "--d": "0.2s" } as React.CSSProperties}
           >
             Weddings, family ceremonies and little ones. Pick a celebration to see the kinds of shoots
             inside it, and the families who let us in.
@@ -304,7 +293,9 @@ export function GalleryRows({ categories }: { categories: GalleryCategory[] }) {
                   // (a row with too little in it keeps the usual height rather than growing)
                   style={sum < l.target * GAP ? { maxWidth: `${(sum / l.target) * 100}%` } : undefined}
                 >
-                  {row.cats.map((c) => card(c, categories.indexOf(c), sizesIn(l, k, c)))}
+                  {row.cats.map((c, j) =>
+                    card(c, categories.indexOf(c), sizesIn(l, k, c), k === 0 ? 0.3 + j * 0.09 : undefined),
+                  )}
                   {last && l.askShape > 0 && (
                     <li style={{ "--r": l.askShape } as React.CSSProperties}>
                       {/* (its shape makes it exactly as tall as the photos beside it) */}
