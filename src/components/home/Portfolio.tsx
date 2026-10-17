@@ -1,7 +1,6 @@
 "use client";
 
 import Image, { getImageProps } from "next/image";
-import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type Lenis from "lenis";
 import { useLenis } from "lenis/react";
@@ -113,18 +112,6 @@ function StoryPage({ story, index }: PageProps) {
       <p className="mt-[3.5cqw] hidden text-[clamp(0.8rem,3.3cqw,1.08rem)] leading-[1.7] text-pretty text-ink/85 @[22rem]:block">
         {story.note}
       </p>
-      {/* their page in the gallery, with all the photos and their words */}
-      {/* (not fetched ahead: the gallery pages would all start downloading as the album opens) */}
-      {story.link && (
-        <Link
-          href={story.link}
-          prefetch={false}
-          className="group mt-[3cqmin] inline-flex w-fit shrink-0 items-center gap-[0.7em] rounded-[2px] border border-accent-deep/45 px-[1.3em] py-[0.85em] font-heading text-[clamp(0.56rem,2.3cqw,0.72rem)] font-bold tracking-[0.16em] text-accent-deep uppercase transition-colors duration-500 hover:border-accent-deep hover:bg-accent-deep hover:text-cream focus-visible:border-accent-deep focus-visible:bg-accent-deep focus-visible:text-cream landscape:mt-[3.5cqw]"
-        >
-          See full story
-          <ArrowIcon className="size-[1.2em] transition-transform duration-500 group-hover:translate-x-1" />
-        </Link>
-      )}
       {/* Side by side the prints sit at the foot of the page, the second a little lower; when the
           text leaves less room they shrink (container query on the space left below the text) */}
       <div className="mt-[3.5cqmin] grid min-h-0 flex-1 grid-cols-2 gap-[3cqw] landscape:mt-[5cqw] landscape:flex landscape:items-end landscape:gap-[4cqw] landscape:[container-type:size]">

@@ -1,7 +1,6 @@
 import { SmoothScroll } from "@/components/providers/SmoothScroll";
 import { SectionJump } from "@/components/providers/SectionJump";
 import { SiteProvider } from "@/components/providers/SiteProvider";
-import { SearchProvider } from "@/components/providers/SearchProvider";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { FloatingContact } from "@/components/layout/FloatingContact";
@@ -54,17 +53,14 @@ export default async function SiteLayout({ children }: LayoutProps<"/">) {
           services: services.map((s) => s.name),
         }}
       >
-        {/* the gallery search, opened from the menu bar on every page */}
-        <SearchProvider>
-          <SmoothScroll>
-            {/* handles /?view=services from the admin's "View on site" buttons */}
-            <SectionJump />
-            <Navbar />
-            {children}
-            <Footer />
-            <FloatingContact />
-          </SmoothScroll>
-        </SearchProvider>
+        <SmoothScroll>
+          {/* handles /?view=services from the admin's "View on site" buttons */}
+          <SectionJump />
+          <Navbar />
+          {children}
+          <Footer />
+          <FloatingContact />
+        </SmoothScroll>
       </SiteProvider>
     </>
   );

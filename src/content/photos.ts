@@ -7,8 +7,7 @@
         services/    → the camera viewfinder
         portfolio/   → the album stories
         about/       → the photographer
-        gallery/     → the category tiles on the gallery page
-        stories/     → each kind of shoot's photos, one folder each (see stories.ts)
+      (The gallery's photos aren't here: they're uploaded in the admin's Gallery section.)
    2. Point `src` at the new file. Paths start at /images, for example:
         src: "/images/hero/my-wedding-photo.jpg",
    3. Update `alt` — a short description of what is in the photo
@@ -472,50 +471,6 @@ const films: Photo[] = [
   },
 ];
 
-/* ── 9. GALLERY — one print per category on the gallery page (/gallery) ─────────
-   An upright (portrait) photo works best: each print is a little taller than wide (4:5).
-   Folder: public/images/gallery
-   Leave src empty ("") and the tile shows "Photos coming soon".
-   Weddings to Kids & Birthdays reuse the studio's photos from the home page. Family functions,
-   Portraits and Events are free stock photos for now (see `stock`): replace them with the
-   studio's own before launch. */
-const gallery = {
-  weddings: {
-    src: "/images/services/wedding.jpg",
-    alt: "Bride and groom in gold silk and garlands, foreheads touching at a temple wedding",
-  },
-  couple: {
-    src: "/images/services/pre-wedding.jpg",
-    alt: "Couple smiling at each other outdoors under the trees",
-  },
-  maternityBaby: {
-    src: "/images/services/maternity.jpg",
-    alt: "Mother-to-be in a green and gold silk saree holding her bump",
-  },
-  kidsBirthdays: {
-    src: "/images/portfolio/birthday-1.jpg",
-    alt: "Baby girl in a flower crown sitting on a golden balloon at her first birthday",
-    position: "50% 50%",
-  },
-  familyFunctions: {
-    src: "/images/gallery/family-functions.jpg",
-    alt: "Family gathered joyfully around a woman in a silk saree outside a traditional house",
-    stock: "Anoop VS, Pexels",
-  },
-  portraits: {
-    src: "/images/gallery/portraits.jpg",
-    alt: "Woman in a teal and gold silk saree with temple jewellery, chin resting on her hand",
-    position: "50% 22%",
-    stock: "Abhishek Kumar, Pexels",
-  },
-  events: {
-    src: "/images/gallery/events.jpg",
-    alt: "Bharatanatyam dancer mid-pose on a dark stage",
-    position: "50% 12%",
-    stock: "Jayanth Muppaneni, Pexels",
-  },
-} satisfies Record<string, Photo>;
-
 export const photos = {
   logo,
   hero,
@@ -530,5 +485,4 @@ export const photos = {
   contact: contactPhoto,
   contactBackdrop,
   films,
-  gallery,
 };

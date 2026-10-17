@@ -16,6 +16,8 @@ type Props = {
   noun?: string;
   /** the row's own name, when it has one */
   label?: string;
+  /** anything else that goes with it, said in the question ("Its 9 sub-categories go too.") */
+  detail?: string;
 };
 
 /* Reordering uses buttons rather than drag-and-drop: it works with a keyboard and
@@ -30,15 +32,16 @@ export function RowControls({
   removable = true,
   noun = "item",
   label,
+  detail,
 }: Props) {
   const confirm = useConfirm();
 
   async function remove() {
     const sure = await confirm({
       title: `Delete this ${noun.toLowerCase()}?`,
-      body: label
-        ? `“${label}” will be removed from the list. It only becomes final when you press Save.`
-        : "It will be removed from the list. It only becomes final when you press Save.",
+      body: `${label ? `“${label}” will be removed from the list.` : "It will be removed from the list."}${
+        detail ? ` ${detail}` : ""
+      } It only becomes final when you press Save.`,
       confirmLabel: "Delete it",
       tone: "bad",
     });

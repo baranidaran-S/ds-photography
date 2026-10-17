@@ -58,6 +58,14 @@ const paths: Record<IconName, React.ReactNode> = {
       <path d="M8 3v17" />
     </>
   ),
+  gallery: (
+    <>
+      <rect x="3" y="5" width="14" height="14" rx="2" />
+      <path d="M7 3h11a3 3 0 0 1 3 3v11" />
+      <path d="m3.5 16 4-4 3.5 3.5 2-2 3.5 3.5" />
+      <circle cx="12.5" cy="9.5" r="1.3" />
+    </>
+  ),
   chat: (
     <>
       <path d="M20 11.5a8.5 8.5 0 0 1-12.6 7.4L3.5 20l1.2-3.7A8.5 8.5 0 1 1 20 11.5Z" />

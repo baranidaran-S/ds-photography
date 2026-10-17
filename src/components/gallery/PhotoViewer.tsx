@@ -8,7 +8,7 @@ import { ArrowIcon } from "@/components/ui/icons";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-/* A story's photos full-screen, one at a time: arrows, the keyboard (← → and Esc) or a swipe
+/* An album's photos full-screen, one at a time: arrows, the keyboard (← → and Esc) or a swipe
    move through them. The page behind holds still while it's open, and the keyboard comes back
    to the photo that opened it when it closes. */
 export function PhotoViewer({

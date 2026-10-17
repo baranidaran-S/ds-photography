@@ -15,6 +15,7 @@ export type IconName =
   | "camera"
   | "film"
   | "album"
+  | "gallery"
   | "chat"
   | "grid"
   | "media"
@@ -42,6 +43,7 @@ export const navGroups: { title: string; items: NavItem[] }[] = [
     items: [
       { label: "Services", href: "/admin/services", icon: "camera" },
       { label: "Films", href: "/admin/films", icon: "film" },
+      { label: "Gallery", href: "/admin/gallery", icon: "gallery" },
       { label: "Portfolio Stories", href: "/admin/stories", icon: "album" },
       { label: "Reviews", href: "/admin/reviews", icon: "chat" },
       { label: "Instagram Strip", href: "/admin/instagram", icon: "grid" },

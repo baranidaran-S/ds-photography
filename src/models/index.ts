@@ -199,6 +199,103 @@ export const Story = register(
   ),
 );
 
+/* ─────────────────────────────── Gallery ───────────────────────────── */
+/* The gallery (/gallery): categories, each holding kinds of shoot ("sub-categories"). A
+   kind's address is made from its name (lib/slug.ts) when it's saved. Their ids stay the
+   same from one save to the next, so what hangs off them (a kind's photos) stays attached. */
+
+/** A gallery photo: where it is, its storage name (to delete or move it) and its size — the
+    gallery pages lay photos out by their shape, so nothing ever needs cropping */
+const galleryPhotoSchema = new Schema(
+  {
+    src: { type: String, default: "" },
+    publicId: { type: String, default: "" },
+    width: { type: Number, default: 0 },
+    height: { type: Number, default: 0 },
+  },
+  { _id: false },
+);
+
+export type GalleryPhotoDoc = {
+  src: string;
+  publicId: string;
+  width: number;
+  height: number;
+};
+
+export type GalleryCategoryData = {
+  _id: string;
+  name: string;
+  slug: string;
+  cover: GalleryPhotoDoc;
+  order: number;
+  active: boolean;
+};
+
+export const GalleryCategory = register(
+  "GalleryCategory",
+  new Schema(
+    {
+      name: { type: String, required: true },
+      slug: { type: String, required: true, index: true },
+      cover: { type: galleryPhotoSchema, default: () => ({}) },
+      ...orderable,
+    },
+    { timestamps: true },
+  ),
+);
+
+export type GallerySubData = {
+  _id: string;
+  /** the category it's in */
+  category: string;
+  name: string;
+  /** the Tamil or traditional name, shown with the English one */
+  local: string;
+  slug: string;
+  /** its card on the category's page, and the photo that opens its album */
+  cover: GalleryPhotoDoc;
+  order: number;
+  active: boolean;
+};
+
+export const GallerySub = register(
+  "GallerySub",
+  new Schema(
+    {
+      category: { type: Schema.Types.ObjectId, ref: "GalleryCategory", required: true, index: true },
+      name: { type: String, required: true },
+      local: { type: String, default: "" },
+      slug: { type: String, required: true },
+      cover: { type: galleryPhotoSchema, default: () => ({}) },
+      ...orderable,
+    },
+    { timestamps: true },
+  ),
+);
+
+/* A kind of shoot's photos, one record each (a kind may hold thousands, so they're never kept in
+   one list), shown newest first: the id grows with time, so sorting by it is newest first, and
+   "the next ones after this id" pages through them quickly at any size */
+export type GalleryPhotoData = GalleryPhotoDoc & {
+  _id: string;
+  /** the kind of shoot it's in */
+  sub: string;
+};
+
+const galleryPhoto = new Schema(
+  {
+    sub: { type: Schema.Types.ObjectId, ref: "GallerySub", required: true },
+    src: { type: String, required: true },
+    publicId: { type: String, default: "" },
+    width: { type: Number, default: 0 },
+    height: { type: Number, default: 0 },
+  },
+  { timestamps: true },
+);
+galleryPhoto.index({ sub: 1, _id: -1 });
+export const GalleryPhoto = register("GalleryPhoto", galleryPhoto);
+
 /* ─────────────────────────────── Reviews ───────────────────────────── */
 
 export type ChatMessageData = {

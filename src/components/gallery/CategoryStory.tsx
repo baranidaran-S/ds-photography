@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
-import type { ShownPhoto, StoryView } from "@/lib/storyView";
+import { ALBUM_PAGE, shownOf, type ShownPhoto } from "@/lib/album";
+import type { StoryView } from "@/lib/storyView";
 import { useEnquiry } from "@/components/providers/SiteProvider";
 import { ArrowIcon } from "@/components/ui/icons";
 import { FocusMark } from "@/components/ui/ornaments";
@@ -13,50 +14,27 @@ import { SCREENS, warmPhotos } from "./preload";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-// Photos shown at first, and added each time "Show more" is pressed
-const PAGE = 24;
-
-// Their favourites go in one row while their shapes (width ÷ height) add up to no more than
-// this; past it (mostly wide photos) the row would be under about 200px tall on a computer, so
-// they take two rows
-const ROW_LIMIT = 5.5;
-
-/* Small line icons for the facts of the day */
-const FACT_ICONS = {
-  when: (
-    <path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />
-  ),
-  where: (
-    <>
-      <path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" />
-      <circle cx="12" cy="9.5" r="2.5" />
-    </>
-  ),
-  shoot: (
-    <>
-      <path d="M4 8h3l2-2.5h6L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z" />
-      <circle cx="12" cy="13" r="3.5" />
-    </>
-  ),
-};
-
 // The last photos are placed together, trying every way, so the columns end together: this many
 // for two columns, or for three (a few thousand ways each, which takes a moment)
 const LAST_FEW = { 2: 12, 3: 8 } as Record<number, number>;
 
+type Page = { photos: { id: string; src: string; width: number; height: number }[]; more: boolean };
+
 /** Shares the photos out across the columns: the first row in order, left to right; then each to
-    whichever column is shortest so far; and the last few wherever leaves the columns' ends most
-    even (each next photo alone can't see the ones still to come, so a run of tall photos at the
-    end would otherwise leave one column short). The places are worked out once for all the
-    photos, and a column keeps its photos in order, so "Show more" only ever adds photos at the
-    bottom of the columns, never moving one already showing */
-function columnsOf(photos: ShownPhoto[], cols: number) {
+    whichever column is shortest so far; and, once the last of them are in (`settledFrom` is where
+    the last batch starts; null while more may come), the last few of that batch wherever leaves
+    the columns' ends most even (each next photo alone can't see the ones still to come, so a run
+    of tall photos at the end would otherwise leave one column short). Each photo's place depends
+    only on the ones before it, so "Show more" only ever adds photos at the bottom of the columns,
+    never moving one already showing */
+function columnsOf(photos: ShownPhoto[], cols: number, settledFrom: number | null) {
   // each photo's height for a column one unit wide, and the gap under it
   const tall = photos.map((p) => p.h / p.w + 0.04);
   const heights: number[] = Array(cols).fill(0);
   const place: number[] = [];
   const firstRow = Math.min(cols, photos.length);
-  const last = Math.min(photos.length - firstRow, LAST_FEW[cols] ?? 8);
+  const last =
+    settledFrom === null ? 0 : Math.max(0, Math.min(photos.length - Math.max(firstRow, settledFrom), LAST_FEW[cols] ?? 8));
   const end = photos.length - last;
   for (let i = 0; i < end; i++) {
     const c = i < firstRow ? i : heights.indexOf(Math.min(...heights));
@@ -80,37 +58,43 @@ function columnsOf(photos: ShownPhoto[], cols: number) {
   return columns;
 }
 
-/* A story page:
-   - a band with their photo whole in the middle, over the same photo blurred to fill the band
-   - their names, and the facts of the day
-   - their photos, each whole at its own shape, a page at a time ("Show more" adds the next);
-     tap one to see it full-screen, and step through all of them there
-   - their experience of our team in their own words (the description in stories.ts), beside
-     who photographed it; that side is the same on every page
-   - the photos they love most, in a row
+/* A kind of shoot's page: one album of all its photos, not one couple's or family's story.
+   - a band with its cover photo whole in the middle, over soft cream silk (none yet: a faint frame)
+   - its name (and its Tamil or traditional name), and how many photos
+   - its photos, newest first, each whole at its own shape: the first ones come with the page and
+     "Show more" fetches the next (they start coming as the button comes near, so they're there
+     when it's pressed); tap one to see it full-screen, and step through them there
    - an invitation to book, and the kinds either side (the breadcrumb leads back to the category)
-   Photos come from the kind's folder and words from stories.ts; anything missing arrives as a
-   placeholder (storyView.ts). */
+   With no photos yet it says they're coming; with no other kind in its category, there's no
+   Previous / Next. */
 export function CategoryStory({ view }: { view: StoryView }) {
-  const { category, kind, story, prev, next } = view;
+  const { category, kind, cover, total, prev, next } = view;
   const root = useRef<HTMLElement>(null);
   const enquire = useEnquiry();
   const [viewing, setViewing] = useState<number | null>(null);
-  const [shown, setShown] = useState(PAGE);
+  const [photos, setPhotos] = useState(view.photos);
+  const [more, setMore] = useState(view.more);
+  const [settledFrom, setSettledFrom] = useState<number | null>(view.more ? null : 0);
+  const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
 
-  // the viewer steps through all their photos, whether or not "Show more" has reached them yet
-  const real: ShownPhoto[] = story.photos.filter((p) => p.src);
-  const photoCount = real.length;
-  const showing = Math.min(shown, story.photos.length);
+  const real: ShownPhoto[] = photos.filter((p) => p.src);
+  const photoCount = total;
+  const showing = photos.length;
 
   // phones two columns, tablets and computers three; each only shows on its own screen size,
   // and only its photos that are showing load
   const layouts = useMemo(
     () => [
-      { key: "phone", show: "flex md:hidden", sizes: "50vw", columns: columnsOf(story.photos, 2) },
-      { key: "wide", show: "hidden md:flex", sizes: "(min-width: 1320px) 410px, 33vw", columns: columnsOf(story.photos, 3) },
+      { key: "phone", show: "flex md:hidden", sizes: "50vw", columns: columnsOf(photos, 2, settledFrom) },
+      {
+        key: "wide",
+        show: "hidden md:flex",
+        sizes: "(min-width: 1320px) 410px, 33vw",
+        columns: columnsOf(photos, 3, settledFrom),
+      },
     ],
-    [story.photos],
+    [photos, settledFrom],
   );
 
   useGSAP(
@@ -120,7 +104,7 @@ export function CategoryStory({ view }: { view: StoryView }) {
       const q = gsap.utils.selector(el);
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      // (arriving, the photo, their names and the facts rise in by themselves from the CSS,
+      // (arriving, the photo, the name and the count rise in by themselves from the CSS,
       // .rise-in, so they show without waiting for this)
       window.__dsReady = true;
       if (reduce) return;
@@ -151,95 +135,61 @@ export function CategoryStory({ view }: { view: StoryView }) {
 
   // more photos make the page longer: everything below them is measured again
   useEffect(() => {
-    if (shown > PAGE) ScrollTrigger.refresh();
-  }, [shown]);
+    if (showing > ALBUM_PAGE) ScrollTrigger.refresh();
+  }, [showing]);
+
+  // the next photos, fetched once (as "Show more" comes near, or when it's pressed)
+  const lastId = photos.at(-1)?.id ?? "";
+  const nextPage = useRef<{ after: string; page: Promise<Page> } | null>(null);
+  const fetchNext = () => {
+    if (nextPage.current?.after !== lastId) {
+      const page = fetch(`/api/gallery/photos?sub=${kind.id}&before=${lastId}`).then((r) =>
+        r.ok ? (r.json() as Promise<Page>) : Promise.reject(new Error("not loaded")),
+      );
+      // (a failed fetch is tried again next time)
+      page.catch(() => (nextPage.current = null));
+      nextPage.current = { after: lastId, page };
+    }
+    return nextPage.current.page;
+  };
 
   // as "Show more" comes near, the next photos start downloading, so they're there when it's pressed
-  const more = useRef<HTMLDivElement>(null);
+  const moreBox = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const el = more.current;
-    if (!el) return;
+    const el = moreBox.current;
+    if (!el || !more) return;
     const io = new IntersectionObserver(
       ([e]) => {
         if (!e.isIntersecting) return;
         io.disconnect();
         const sizes = layouts.find((l) => l.key === (matchMedia(SCREENS.phone).matches ? "phone" : "wide"))!.sizes;
-        warmPhotos(
-          story.photos
-            .slice(showing, showing + PAGE)
-            .filter((p) => p.src)
-            .map((p) => ({ src: p.src, sizes })),
-        );
+        fetchNext()
+          .then((page) => warmPhotos(page.photos.map((p) => ({ src: p.src, sizes }))))
+          .catch(() => {});
       },
       { rootMargin: "1000px 0px" },
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [showing, layouts, story.photos]);
+  });
+
+  async function showMore() {
+    setLoading(true);
+    setFailed(false);
+    try {
+      const page = await fetchNext();
+      const start = photos.length;
+      setPhotos([...photos, ...page.photos.map((p, i) => shownOf(p, kind.name, start + i + 1))]);
+      setMore(page.more);
+      if (!page.more) setSettledFrom(start);
+    } catch {
+      setFailed(true);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const open = (src: string) => setViewing(real.findIndex((p) => p.src === src));
-
-  // Their favourites. Computers: in one row with the widest in the middle, so a wide photo among
-  // tall ones sits centre stage; but when they're mostly wide photos, one row would make them all
-  // short (a strip), so they go in two rows instead, shared so the rows come out about as tall
-  // as each other. Phones: the widest across the top, then the others two by two.
-  const loved = useMemo(() => {
-    const list = story.loved;
-    if (!list.length) return { rows: [], phone: [] };
-    const shape = (p: ShownPhoto) => p.w / p.h;
-    const sum = (ps: ShownPhoto[]) => ps.reduce((a, p) => a + shape(p), 0);
-    const widest = list.reduce((w, p, i) => (shape(p) > shape(list[w]) ? i : w), 0);
-    const rest = list.filter((_, i) => i !== widest);
-    const phone: ShownPhoto[][] = [[list[widest]]];
-    for (let i = 0; i < rest.length; i += 2) phone.push(rest.slice(i, i + 2));
-
-    // a row's height is its width ÷ its photos' shapes added up: past this, the photos get short
-    if (sum(list) <= ROW_LIMIT) {
-      const half = Math.floor(rest.length / 2);
-      return { rows: [[...rest.slice(0, half), list[widest], ...rest.slice(half)]], phone };
-    }
-    // two rows: the fewer on top (so they're the bigger ones), choosing which go up so the two
-    // rows' heights come closest; each row keeps their order
-    const top = Math.floor(list.length / 2);
-    let best: number[] = [];
-    let gap = Infinity;
-    const pick = (from: number, chosen: number[]) => {
-      if (chosen.length === top) {
-        const up = chosen.map((i) => list[i]);
-        const down = list.filter((_, i) => !chosen.includes(i));
-        const d = Math.abs(sum(up) - sum(down));
-        if (d < gap - 1e-9) {
-          gap = d;
-          best = chosen;
-        }
-        return;
-      }
-      for (let i = from; i < list.length; i++) pick(i + 1, [...chosen, i]);
-    };
-    pick(0, []);
-    return {
-      rows: [best.map((i) => list[i]), list.filter((_, i) => !best.includes(i))],
-      phone,
-    };
-  }, [story.loved]);
-
-  /** One of their favourites, whole, with a thin gold edge */
-  const lovedPhoto = (p: ShownPhoto, sizes: string) => (
-    <button
-      type="button"
-      onClick={() => open(p.src)}
-      aria-label="Open one of their favourite photos"
-      className="lv-photo group relative block size-full cursor-pointer overflow-hidden rounded-[12px] lg:rounded-[16px]"
-    >
-      <Image
-        src={p.src}
-        alt={p.alt}
-        fill
-        sizes={sizes}
-        className="object-cover transition-transform duration-1000 ease-luxe group-hover:scale-[1.04]"
-      />
-    </button>
-  );
 
   /** A photo at its own shape, or an empty frame where one will go */
   const photo = (p: ShownPhoto, sizes: string, className = "") =>
@@ -275,11 +225,11 @@ export function CategoryStory({ view }: { view: StoryView }) {
     );
 
   return (
-    <main ref={root} aria-labelledby="sf-names" className="light-page relative bg-cream text-ink">
-      {/* ── The opening band: their photo whole, over soft cream silk (one picture for every story) ── */}
+    <main ref={root} aria-labelledby="sf-title" className="light-page relative bg-cream text-ink">
+      {/* ── The opening band: its photo whole, over soft cream silk (one picture for every kind) ── */}
       <section
         className="sf-hero relative sm:h-[calc(62svh+1rem)] sm:min-h-[416px] lg:h-[calc(74svh+2.5rem)] lg:max-h-[900px]"
-        style={{ "--r": story.cover.w / story.cover.h } as React.CSSProperties}
+        style={{ "--r": cover ? cover.w / cover.h : 1.5 } as React.CSSProperties}
       >
         {/* (the band clips the silk, not the photo, so the photo's shadow falls softly onto the page) */}
         <div aria-hidden className="absolute inset-0 overflow-hidden">
@@ -300,25 +250,32 @@ export function CategoryStory({ view }: { view: StoryView }) {
           <div
             className="sf-hero-photo rise-in relative overflow-hidden rounded-[12px] shadow-[0_30px_70px_-30px_rgb(60_30_15/0.6)] ring-1 ring-ink/10 lg:rounded-[16px]"
           >
-            <Image
-              src={story.cover.src}
-              alt={story.cover.alt}
-              fill
-              sizes="(max-width: 1023px) 92vw, 70vw"
-              loading="eager"
-              fetchPriority="high"
-              className="object-cover"
-              style={{ objectPosition: story.cover.position }}
-            />
+            {cover ? (
+              <Image
+                src={cover.src}
+                alt={cover.alt}
+                fill
+                sizes="(max-width: 1023px) 92vw, 70vw"
+                loading="eager"
+                fetchPriority="high"
+                className="object-cover"
+                style={{ objectPosition: cover.position }}
+              />
+            ) : (
+              // no photo yet: a faint focus frame
+              <span className="absolute inset-0 grid place-items-center bg-[#ece3d4]">
+                <FocusMark className="h-12 w-16 text-accent/30" />
+              </span>
+            )}
           </div>
         </div>
       </section>
 
-      {/* ── Their names, and the facts of the day ── */}
+      {/* ── Its name, and how many photos ── */}
       <section className="mx-auto max-w-[1180px] px-4 pt-8 text-center sm:px-8 lg:pt-12">
         <nav
           aria-label="Breadcrumb"
-          className="sf-crumbs rise-in flex flex-wrap items-center justify-center gap-2.5 font-mono text-[0.62rem] tracking-[0.18em] text-ink/55 uppercase"
+          className="rise-in flex flex-wrap items-center justify-center gap-2.5 font-mono text-[0.62rem] tracking-[0.18em] text-ink/55 uppercase"
           style={{ "--d": "0.3s" } as React.CSSProperties}
         >
           <Link href="/gallery" className="transition-colors hover:text-accent-deep">
@@ -334,177 +291,74 @@ export function CategoryStory({ view }: { view: StoryView }) {
           </span>
         </nav>
         <h1
-          id="sf-names"
-          className="sf-names rise-in mt-5 font-display text-[clamp(2.6rem,8vw,6.5rem)] leading-[1]"
+          id="sf-title"
+          className="rise-in mt-5 font-display text-[clamp(2.5rem,7vw,5.75rem)] leading-[1.02]"
           style={{ "--d": "0.4s" } as React.CSSProperties}
         >
-          {story.names}
+          {kind.name}
         </h1>
-        {/* (like a printed invitation: a gold double edge, each fact under its own little seal) */}
-        <dl
-          className="sf-facts rise-in relative mt-10 grid grid-cols-2 rounded-[22px] bg-[#fffdf8] shadow-[0_30px_60px_-34px_rgb(60_30_15/0.45)] ring-1 ring-brand/50 sm:grid-cols-3 lg:mt-12"
+        {kind.local && (
+          <p
+            className="rise-in mt-3 font-display text-[clamp(1.15rem,2.2vw,1.7rem)] text-ink/50"
+            style={{ "--d": "0.48s" } as React.CSSProperties}
+          >
+            {kind.local}
+          </p>
+        )}
+        <div
+          aria-hidden
+          className="rise-in mt-7 flex items-center justify-center gap-3.5 text-[#c9a35f]"
           style={{ "--d": "0.55s" } as React.CSSProperties}
         >
-          {(
-            [
-              ["when", "When", story.date],
-              ["where", "Where", story.place],
-              ["shoot", "The shoot", kind.local ? `${kind.name} (${kind.local})` : kind.name],
-            ] as const
-          ).map(([icon, term, value]) => (
-            <div
-              key={term}
-              // (phones: the shoot runs the full width under the other two)
-              className="relative flex min-w-0 flex-col items-center px-3 pt-6 pb-5 last:col-span-2 sm:px-6 sm:pt-9 sm:pb-8 sm:last:col-span-1"
-            >
-              <dt className="flex flex-col items-center gap-2.5 font-mono sm:gap-3 text-[0.6rem] tracking-[0.22em] text-[#9a7432] uppercase">
-                <span
-                  aria-hidden
-                  className="grid size-10 place-items-center rounded-full bg-[#f6ecdf] text-accent-deep ring-1 ring-brand/45 sm:size-11 lg:size-12"
-                >
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth={1.4}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="size-5"
-                  >
-                    {FACT_ICONS[icon]}
-                  </svg>
-                </span>
-                {term}
-              </dt>
-              <dd className="mt-2 font-display text-[clamp(1.05rem,1.6vw,1.4rem)] leading-[1.3]">{value}</dd>
-            </div>
-          ))}
-        </dl>
+          <i className="h-px w-14 bg-gradient-to-l from-current to-transparent" />
+          <span className="text-[0.6rem]">&#9670;</span>
+          <i className="h-px w-14 bg-gradient-to-r from-current to-transparent" />
+        </div>
+        <p
+          className="rise-in mt-4 font-mono text-[0.62rem] tracking-[0.2em] text-ink/55 uppercase"
+          style={{ "--d": "0.6s" } as React.CSSProperties}
+        >
+          {photoCount ? <>{pad(photoCount)} photos &middot; tap one to open</> : "Photos coming soon"}
+        </p>
       </section>
 
-      {/* ── Their photos, a page at a time ── */}
-      <section aria-labelledby="sf-photos" className="mx-auto max-w-[1320px] px-3 pt-16 sm:px-6 lg:px-12 lg:pt-24">
-        <div className="sf-rise mb-6 flex items-end justify-between gap-4 px-2 sm:px-0 lg:mb-10">
-          <h2 id="sf-photos" className="font-display text-[clamp(1.9rem,3.4vw,3rem)] leading-[1.1]">
-            The <span className="foil-deep">photos</span>
-          </h2>
-          <p className="pb-1 font-mono text-[0.62rem] tracking-[0.2em] text-ink/55 uppercase">
-            {pad(photoCount)} photos &middot; tap to open
-          </p>
-        </div>
-        {layouts.map((l) => (
-          <div key={l.key} className={`${l.show} items-start gap-2 sm:gap-3 lg:gap-5`}>
-            {l.columns.map((column, c) => (
-              <div key={c} className="flex min-w-0 flex-1 flex-col gap-2 sm:gap-3 lg:gap-5">
-                {column
-                  .filter((i) => i < showing)
-                  .map((i) => (
+      {/* ── Every photo, a page at a time (none yet: the line above says they're coming) ── */}
+      {photos.length > 0 && (
+        <section aria-label={`${kind.name} photos`} className="mx-auto max-w-[1320px] px-3 pt-10 sm:px-6 lg:px-12 lg:pt-14">
+          {layouts.map((l) => (
+            <div key={l.key} className={`${l.show} items-start gap-2 sm:gap-3 lg:gap-5`}>
+              {l.columns.map((column, c) => (
+                <div key={c} className="flex min-w-0 flex-1 flex-col gap-2 sm:gap-3 lg:gap-5">
+                  {column.map((i) => (
                     <div
-                      key={i}
-                      className={i < PAGE ? "sf-tile" : "sf-pop"}
+                      key={photos[i].id ?? i}
+                      className={i < ALBUM_PAGE ? "sf-tile" : "sf-pop"}
                       // (added photos float in one after another)
-                      style={i < PAGE ? undefined : { animationDelay: `${((i - PAGE) % PAGE) * 40}ms` }}
+                      style={i < ALBUM_PAGE ? undefined : { animationDelay: `${((i - ALBUM_PAGE) % ALBUM_PAGE) * 40}ms` }}
                     >
-                      {photo(story.photos[i], l.sizes)}
+                      {photo(photos[i], l.sizes)}
                     </div>
                   ))}
-              </div>
-            ))}
-          </div>
-        ))}
-        {showing < story.photos.length && (
-          <div ref={more} className="mt-10 flex flex-col items-center gap-4 lg:mt-14">
-            <p className="font-mono text-[0.62rem] tracking-[0.2em] text-ink/55 uppercase">
-              Showing {showing} of {photoCount}
-            </p>
-            <button
-              type="button"
-              onClick={() => setShown((s) => s + PAGE)}
-              className="inline-flex items-center gap-3 rounded-full border border-accent-deep/40 px-7 py-3.5 font-heading text-[0.7rem] font-semibold tracking-[0.2em] text-accent-deep uppercase transition-colors duration-500 hover:border-accent-deep hover:bg-accent-deep hover:text-cream"
-            >
-              Show more photos
-              <ArrowIcon className="size-3.5 rotate-90" />
-            </button>
-          </div>
-        )}
-      </section>
-
-      {/* ── Their experience of our team, as a signed note: a cream card with a gold double edge
-         and large gold quote marks (globals.css → .sf-note). The words are this kind's description
-         (stories.ts); every paragraph looks the same, however many there are ── */}
-      <section className="sf-band mt-20 border-y border-ink/10 lg:mt-28">
-        <div className="mx-auto max-w-[1000px] px-4 py-20 sm:px-8 lg:py-28">
-          <div className="sf-rise sf-note relative rounded-[24px] bg-[#fffdf8] px-6 pt-12 pb-14 text-center shadow-[0_40px_80px_-46px_rgb(60_30_15/0.5)] ring-1 ring-brand/50 sm:px-16 sm:py-16 lg:px-20">
-            <span aria-hidden className="sf-note-q sf-note-q-open">
-              &ldquo;
-            </span>
-            <span aria-hidden className="sf-note-q sf-note-q-close">
-              &rdquo;
-            </span>
-            <h2 className="font-heading text-[0.68rem] font-semibold tracking-[0.3em] text-accent-deep uppercase">
-              Their experience
-            </h2>
-            <div className="mx-auto mt-6 max-w-[56ch] space-y-5 font-display text-[clamp(1.1rem,1.55vw,1.3rem)] leading-[1.8] text-ink/85">
-              {story.description.map((para, i) => (
-                <p key={i}>{para}</p>
+                </div>
               ))}
             </div>
-            <div aria-hidden className="mt-8 mb-3 flex items-center justify-center gap-3.5 text-[#c9a35f]">
-              <i className="h-px w-14 bg-current" />
-              <span className="text-[0.6rem]">&#9670;</span>
-              <i className="h-px w-14 bg-current" />
+          ))}
+          {more && (
+            <div ref={moreBox} className="mt-10 flex flex-col items-center gap-4 lg:mt-14">
+              <p className="font-mono text-[0.62rem] tracking-[0.2em] text-ink/55 uppercase">
+                {failed ? "Couldn't load more just now" : `Showing ${showing} of ${photoCount}`}
+              </p>
+              <button
+                type="button"
+                onClick={showMore}
+                disabled={loading}
+                className="inline-flex items-center gap-3 rounded-full border border-accent-deep/40 px-7 py-3.5 font-heading text-[0.7rem] font-semibold tracking-[0.2em] text-accent-deep uppercase transition-colors duration-500 hover:border-accent-deep hover:bg-accent-deep hover:text-cream"
+              >
+                {loading ? "Loading…" : failed ? "Try again" : "Show more photos"}
+                <ArrowIcon className="size-3.5 rotate-90" />
+              </button>
             </div>
-            <p className="font-signature text-[clamp(1.9rem,3.4vw,2.8rem)] leading-[1.2]">their time with our team</p>
-          </div>
-        </div>
-      </section>
-
-      {/* ── The photos they love most, on a deep wine band (globals.css → .lv-*): each whole, all
-         the same height, the widest in the middle (phones: across the top, then two by two). Tap
-         one to see it full-screen ── */}
-      {loved.rows.length > 0 && (
-        // (straight on from the experience band above, no gap between them)
-        <section aria-labelledby="sf-loved" className="lv-band border-b border-cream/10">
-          <div className="sf-rise mx-auto max-w-[1280px] px-4 py-20 sm:px-8 lg:px-12 lg:py-28">
-            <p className="flex items-center justify-center gap-3 font-heading text-[0.68rem] font-semibold tracking-[0.3em] text-brand-light uppercase">
-              <span aria-hidden className="text-[0.9rem] text-accent">
-                &#9829;
-              </span>
-              Hand-picked by them
-            </p>
-            <h2
-              id="sf-loved"
-              className="mt-3 text-center font-signature text-[clamp(2.6rem,6vw,4.6rem)] leading-[1.15] text-cream"
-            >
-              The moments they{" "}
-              <span className="lv-love">
-                love
-              </span>{" "}
-              most
-            </h2>
-            <div className="mt-10 hidden flex-col gap-4 md:flex lg:mt-14 lg:gap-5">
-              {loved.rows.map((row, k) => (
-                <ul key={k} className="lv-row flex gap-4 lg:gap-5">
-                  {row.map((p) => (
-                    <li key={p.src} style={{ "--r": p.w / p.h } as React.CSSProperties}>
-                      {lovedPhoto(p, "(min-width: 1280px) 600px, 50vw")}
-                    </li>
-                  ))}
-                </ul>
-              ))}
-            </div>
-            <div className="mt-8 flex flex-col gap-3 md:hidden">
-              {loved.phone.map((row, k) => (
-                <ul key={k} className="lv-row flex gap-3">
-                  {row.map((p) => (
-                    <li key={p.src} style={{ "--r": p.w / p.h } as React.CSSProperties}>
-                      {lovedPhoto(p, row.length > 1 ? "50vw" : "100vw")}
-                    </li>
-                  ))}
-                </ul>
-              ))}
-            </div>
-          </div>
+          )}
         </section>
       )}
 
@@ -532,35 +386,40 @@ export function CategoryStory({ view }: { view: StoryView }) {
       {/* ── The kinds either side (the breadcrumb at the top leads back to the category) ── */}
       {/* (each a round maroon arrow button, the word, then the kind's name; phones: the arrow
          above the words, so the name has the full width) */}
-      <nav
-        aria-label="More kinds of shoot"
-        className="mx-auto grid max-w-[1320px] grid-cols-2 gap-3 px-4 pb-16 sm:gap-5 sm:px-8 lg:px-12 lg:pb-24"
-      >
-        {(
-          [
-            [prev, "Previous", "rotate-180", "items-start sm:flex-row"],
-            [next, "Next", "", "items-end text-right sm:flex-row-reverse"],
-          ] as const
-        ).map(([to, word, turn, side]) => (
-          <Link
-            key={word}
-            href={`/gallery/${category.slug}/${to.slug}`}
-            className={`group flex flex-col gap-3 sm:items-center sm:gap-5 ${side}`}
-          >
-            <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-deep text-cream transition-colors duration-500 group-hover:bg-accent sm:size-12">
-              <ArrowIcon className={`size-4 sm:size-[1.1rem] ${turn}`} />
-            </span>
-            <span className="min-w-0">
-              <span className="block font-heading text-[0.62rem] font-semibold tracking-[0.25em] text-accent-deep uppercase sm:text-[0.68rem]">
-                {word}
-              </span>
-              <span className="mt-1 block font-display text-[clamp(1rem,2vw,1.6rem)] leading-[1.25] text-ink transition-colors duration-500 group-hover:text-accent-deep">
-                {to.name}
-              </span>
-            </span>
-          </Link>
-        ))}
-      </nav>
+      {prev.slug !== kind.slug && (
+        <nav
+          aria-label="More kinds of shoot"
+          className="mx-auto grid max-w-[1320px] grid-cols-2 gap-3 px-4 pb-16 sm:gap-5 sm:px-8 lg:px-12 lg:pb-24"
+        >
+          {(
+            [
+              [prev, "Previous", "rotate-180", "items-start sm:flex-row"],
+              [next, "Next", "", "col-start-2 items-end text-right sm:flex-row-reverse"],
+            ] as const
+          )
+            // (with only two kinds, the one either side is the same: just Next)
+            .filter(([to, word]) => word === "Next" || to.slug !== next.slug)
+            .map(([to, word, turn, side]) => (
+              <Link
+                key={word}
+                href={`/gallery/${category.slug}/${to.slug}`}
+                className={`group flex flex-col gap-3 sm:items-center sm:gap-5 ${side}`}
+              >
+                <span className="grid size-9 shrink-0 place-items-center rounded-full bg-accent-deep text-cream transition-colors duration-500 group-hover:bg-accent sm:size-12">
+                  <ArrowIcon className={`size-4 sm:size-[1.1rem] ${turn}`} />
+                </span>
+                <span className="min-w-0">
+                  <span className="block font-heading text-[0.62rem] font-semibold tracking-[0.25em] text-accent-deep uppercase sm:text-[0.68rem]">
+                    {word}
+                  </span>
+                  <span className="mt-1 block font-display text-[clamp(1rem,2vw,1.6rem)] leading-[1.25] text-ink transition-colors duration-500 group-hover:text-accent-deep">
+                    {to.name}
+                  </span>
+                </span>
+              </Link>
+            ))}
+        </nav>
+      )}
 
       {viewing !== null && real.length > 0 && (
         <PhotoViewer photos={real} index={viewing} onIndex={setViewing} onClose={() => setViewing(null)} />

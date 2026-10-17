@@ -4,26 +4,21 @@
    for, and searches it here as the visitor types (instant, with no server to ask each time). */
 
 export type SearchItem = {
-  type: "category" | "shoot" | "event";
+  type: "category" | "shoot";
   name: string;
   /** The Tamil or traditional name, shown beside the name */
   local?: string;
   /** Where it sits, shown under the name */
   where: string;
-  /** For the results page's filters: the category it's in (a category: itself), the kind of shoot
-      (a kind: itself; an event: its kind), and an event's town ("Thiruparankundram, Madurai" →
-      "Madurai"); an event's year comes from `date` */
+  /** For the results page's filters: the category it's in (a category: itself), and a kind of
+      shoot's own name */
   category: string;
   kind?: string;
-  place?: string;
   href: string;
   /** A little picture of it */
   photo?: string;
-  /** An event's photo's width ÷ height, so the results page can show it whole */
-  shape?: number;
-  /** An event's date as written ("March 2025"), and as a number for newest first (202503) */
-  when?: string;
-  date?: number;
+  /** A kind of shoot: how many photos its album has */
+  count?: number;
   /** Everything it can be found by */
   words: string;
 };
@@ -48,7 +43,7 @@ const tokensOf = (s: string) =>
     part of a word ("mater" finds Maternity) or run together ("jananivignesh" finds Janani &
     Vignesh); a single letter must start a word. Best: the name exactly, then a name starting
     with it, then a name with a word starting with it, then anything else; among equals, the
-    newest event first, then the list's order. */
+    list's order. */
 export function searchItems(items: SearchItem[], query: string) {
   const tokens = tokensOf(query);
   if (!tokens.length) return [];
@@ -68,8 +63,29 @@ export function searchItems(items: SearchItem[], query: string) {
       return { item, score, i };
     })
     .filter((r) => r !== null)
-    .sort((a, b) => b.score - a.score || (b.item.date ?? 0) - (a.item.date ?? 0) || a.i - b.i)
+    .sort((a, b) => b.score - a.score || a.i - b.i)
     .map((r) => r.item);
+}
+
+/** A few kinds of shoot to suggest before anything is typed, picked from the list itself (so they
+    follow whatever the gallery holds, with nothing written in the code): the kinds with the most
+    photos first, then the gallery's order; one from each category before a second from any, so
+    they're varied. A kind with no photos yet isn't suggested; none in the gallery: none. */
+export function suggestionsOf(items: SearchItem[], count: number) {
+  const ranked = items
+    .map((it, i) => ({ it, i }))
+    .filter(({ it }) => it.type === "shoot" && (it.count ?? 0) > 0)
+    .sort((a, b) => (b.it.count ?? 0) - (a.it.count ?? 0) || a.i - b.i);
+  // each category's kinds, best first (the categories in the order of their best kind)
+  const byCategory = new Map<string, SearchItem[]>();
+  for (const { it } of ranked) byCategory.set(it.category, [...(byCategory.get(it.category) ?? []), it]);
+  const picked: SearchItem[] = [];
+  for (let round = 0; picked.length < count; round++) {
+    const next = [...byCategory.values()].map((kinds) => kinds[round]).filter((it) => it !== undefined);
+    if (!next.length) break;
+    picked.push(...next);
+  }
+  return picked.slice(0, count);
 }
 
 // the list, fetched once and kept for the rest of the visit

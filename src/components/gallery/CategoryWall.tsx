@@ -57,7 +57,8 @@ function arrange(kinds: GallerySub[], cols: number, caption: number) {
     });
   }
 
-  const columns: number[][] = Array.from({ length: Math.min(cols, kinds.length) }, (_, c) => [c]);
+  // (with fewer kinds than columns the rest stay empty, so a card keeps its usual size)
+  const columns: number[][] = Array.from({ length: cols }, (_, c) => (c < kinds.length ? [c] : []));
   place.forEach((c, k) => columns[c].push(cols + k));
   const h = columns.map(
     (list, c) => (c % 2 ? LOWER : 0) + list.reduce((a, i) => a + tall[i], 0),
@@ -66,18 +67,18 @@ function arrange(kinds: GallerySub[], cols: number, caption: number) {
 }
 
 /** Of these column counts, the one whose columns end most evenly, measured on the page (a
-    column's width shrinks as there are more of them); on a tie, the fewer, bigger columns */
+    column's width shrinks as there are more of them); on a tie, the fewer, bigger columns. With
+    only a kind or two, the fewest columns (each card at its usual size, not stretched across) */
 function bestOf(kinds: GallerySub[], counts: number[], caption: number) {
-  const tries = [...new Set(counts.map((c) => Math.max(1, Math.min(c, kinds.length))))].map((c) =>
-    arrange(kinds, c, caption),
-  );
+  if (kinds.length < Math.min(...counts)) return arrange(kinds, Math.min(...counts), caption);
+  const tries = [...new Set(counts)].map((c) => arrange(kinds, c, caption));
   return tries.reduce((a, b) => (b.spread / b.cols < a.spread / a.cols - 1e-9 ? b : a));
 }
 
 /* A category's page: all its kinds of shoot at once, as a gallery wall. Each card takes its photo's
    own shape (whatever the client uploads shows whole, nothing to crop or adjust), with its name
    underneath. Every other column starts lower, and as the page scrolls those columns climb faster
-   than the others, so the wall seems to drift. Each card opens that kind's story; it lights up
+   than the others, so the wall seems to drift. Each card opens that kind's album; it lights up
    with a gold edge that follows the mouse (globals.css → .gc-tile).
    Phones, tablets and computers each have their own arrangement (two, three, and three or four
    columns), worked out here from the photos' shapes, so it's right before the page even runs. */
@@ -159,10 +160,8 @@ export function CategoryWall({
       // the other screen sizes' arrangements aren't showing: theirs are simply there (in case the
       // screen turns), so they don't hold up the showing cards' one-after-another entrance
       const showing = items.filter((c) => c.offsetParent);
-      gsap.set(
-        items.filter((c) => !c.offsetParent),
-        { autoAlpha: 1, y: 0, scale: 1 },
-      );
+      const elsewhere = items.filter((c) => !c.offsetParent);
+      if (elsewhere.length) gsap.set(elsewhere, { autoAlpha: 1, y: 0, scale: 1 });
       // cards already on screen (or scrolled past, coming back part-way down) appear straight away
       const line = window.innerHeight * 0.92;
       const waiting = showing.filter((c) => c.getBoundingClientRect().top >= line);
@@ -230,7 +229,7 @@ export function CategoryWall({
               )}
             </span>
           </span>
-          <span aria-hidden className="sw-shade pointer-events-none absolute inset-0" />
+          {s.cover?.src && <span aria-hidden className="sw-shade pointer-events-none absolute inset-0" />}
           <span
             aria-hidden
             className="absolute top-2.5 right-2.5 z-10 grid size-8 place-items-center rounded-full border border-cream/40 text-[0.85rem] text-cream backdrop-blur-[2px] transition-[background-color,border-color,color,rotate] duration-500 ease-luxe group-hover:-rotate-45 group-hover:border-brand group-hover:bg-brand group-hover:text-night group-data-lit:-rotate-45 group-data-lit:border-brand group-data-lit:bg-brand group-data-lit:text-night sm:top-3.5 sm:right-3.5 sm:size-10"
@@ -276,7 +275,7 @@ export function CategoryWall({
             style={{ "--d": "0.06s" } as React.CSSProperties}
           >
             <FocusMark className="h-4 w-6 text-accent" />
-            {pad(number)} / {pad(total)} &middot; {count} kinds of shoot
+            {pad(number)} / {pad(total)} &middot; {count ? `${count} kind${count === 1 ? "" : "s"} of shoot` : "Coming soon"}
           </p>
           <h1
             id="sw-name"
@@ -286,6 +285,20 @@ export function CategoryWall({
             {category.name}
           </h1>
         </header>
+
+        {/* No kinds of shoot in it yet */}
+        {count === 0 && (
+          <div
+            className="rise-in mt-12 flex flex-col items-center rounded-[22px] border border-dashed border-ink/15 px-6 py-16 text-center lg:mt-16"
+            style={{ "--d": "0.3s" } as React.CSSProperties}
+          >
+            <FocusMark className="h-7 w-10 text-accent" />
+            <p className="mt-5 font-display text-[clamp(1.5rem,2.8vw,2.1rem)] leading-[1.2]">Photos coming soon</p>
+            <p className="mt-2 max-w-[40ch] text-[0.95rem] leading-[1.7] text-ink/60">
+              We&rsquo;re putting this part of the gallery together. Please check back soon.
+            </p>
+          </div>
+        )}
 
         {/* The wall: one arrangement for each screen size, only the one that fits showing (its
             top row of photos asked for as soon as the page arrives) */}
@@ -318,28 +331,35 @@ export function CategoryWall({
         </div>
       </div>
 
-      {/* On to the next category, or back */}
-      <nav
-        aria-label="More categories"
-        className="mx-auto mt-16 grid max-w-[1320px] grid-cols-2 gap-3 border-t border-ink/15 px-5 pt-8 pb-16 sm:gap-4 sm:px-8 lg:mt-24 lg:px-12 lg:pb-24"
-      >
-        <Link href={`/gallery/${prev.slug}`} className="group block">
-          <span className="block font-mono text-[0.62rem] tracking-[0.18em] text-ink/55 uppercase">
-            &larr; Previous
-          </span>
-          <span className="mt-2 block font-display text-[clamp(1.2rem,2.4vw,2rem)] transition-colors duration-500 group-hover:text-accent-deep">
-            {prev.name}
-          </span>
-        </Link>
-        <Link href={`/gallery/${next.slug}`} className="group block text-right">
-          <span className="block font-mono text-[0.62rem] tracking-[0.18em] text-ink/55 uppercase">
-            Next &rarr;
-          </span>
-          <span className="mt-2 block font-display text-[clamp(1.2rem,2.4vw,2rem)] transition-colors duration-500 group-hover:text-accent-deep">
-            {next.name}
-          </span>
-        </Link>
-      </nav>
+      {/* On to the next category, or back (none when it's the only one) */}
+      {total > 1 && (
+        <nav
+          aria-label="More categories"
+          className="mx-auto mt-16 grid max-w-[1320px] grid-cols-2 gap-3 border-t border-ink/15 px-5 pt-8 pb-16 sm:gap-4 sm:px-8 lg:mt-24 lg:px-12 lg:pb-24"
+        >
+          {/* (with only two categories, the one either side is the same: just Next) */}
+          {prev.slug !== next.slug && (
+            <Link href={`/gallery/${prev.slug}`} className="group block">
+              <span className="block font-mono text-[0.62rem] tracking-[0.18em] text-ink/55 uppercase">
+                &larr; Previous
+              </span>
+              <span className="mt-2 block font-display text-[clamp(1.2rem,2.4vw,2rem)] transition-colors duration-500 group-hover:text-accent-deep">
+                {prev.name}
+              </span>
+            </Link>
+          )}
+          <Link href={`/gallery/${next.slug}`} className="group col-start-2 block text-right">
+            <span className="block font-mono text-[0.62rem] tracking-[0.18em] text-ink/55 uppercase">
+              Next &rarr;
+            </span>
+            <span className="mt-2 block font-display text-[clamp(1.2rem,2.4vw,2rem)] transition-colors duration-500 group-hover:text-accent-deep">
+              {next.name}
+            </span>
+          </Link>
+        </nav>
+      )}
+      {/* (the only category: room below the wall instead) */}
+      {total <= 1 && <div aria-hidden className="pb-20 lg:pb-28" />}
     </main>
   );
 }

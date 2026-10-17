@@ -1,7 +1,7 @@
 "use client";
 
 import { CldUploadWidget } from "next-cloudinary";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export type UploadedMedia = {
   publicId: string;
@@ -19,6 +19,13 @@ type Props = {
   onUploaded: (media: UploadedMedia) => void;
   label?: string;
   multiple?: boolean;
+  /** how many at once, when several can be chosen */
+  maxFiles?: number;
+  /* Shrinks a photo bigger than this (width or height) in the browser before it's sent, so it
+     uploads faster and takes less space; a camera's 25 MB photo becomes a couple of MB. */
+  shrinkTo?: number;
+  /** also lists it in the admin's Media Library (the gallery's photos aren't: they'd bury it) */
+  library?: boolean;
   className?: string;
 };
 
@@ -28,9 +35,19 @@ export function UploadButton({
   onUploaded,
   label = "Upload photo",
   multiple = false,
+  maxFiles = 20,
+  shrinkTo,
+  library = true,
   className = "",
 }: Props) {
   const [saving, setSaving] = useState(false);
+  /* The upload window is made once, when the button first shows, and keeps the onUploaded it was
+     given then. Calling the newest one instead means a name typed since (before Upload was
+     pressed) isn't put back the way it was. */
+  const latest = useRef(onUploaded);
+  useEffect(() => {
+    latest.current = onUploaded;
+  });
 
   return (
     <CldUploadWidget
@@ -38,11 +55,13 @@ export function UploadButton({
       options={{
         folder: `ds-photography/${folder}`,
         multiple,
-        maxFiles: multiple ? 20 : 1,
+        maxFiles: multiple ? maxFiles : 1,
+        ...(shrinkTo ? { maxImageWidth: shrinkTo, maxImageHeight: shrinkTo } : {}),
         sources: ["local", "url", "camera"],
         resourceType: "image",
-        // 10 MB is generous for a web photo and keeps the free tier healthy
-        maxFileSize: 10_000_000,
+        // 10 MB is generous for a web photo and keeps the free tier healthy (a photo shrunk in the
+        // browser first may start bigger: the 10 MB is checked on what's sent)
+        maxFileSize: shrinkTo ? 60_000_000 : 10_000_000,
         clientAllowedFormats: ["png", "jpg", "jpeg", "webp", "avif"],
         styles: {
           palette: {
@@ -77,19 +96,21 @@ export function UploadButton({
             (info as { original_filename?: string }).original_filename ?? "",
         };
 
-        setSaving(true);
-        try {
-          // record it in the library so it can be reused from the picker
-          await fetch("/api/admin/media", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...media, folder }),
-          });
-        } finally {
-          setSaving(false);
+        if (library) {
+          setSaving(true);
+          try {
+            // record it in the library so it can be reused from the picker
+            await fetch("/api/admin/media", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ...media, folder }),
+            });
+          } finally {
+            setSaving(false);
+          }
         }
 
-        onUploaded(media);
+        latest.current(media);
       }}
     >
       {({ open }) => (

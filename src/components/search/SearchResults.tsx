@@ -1,45 +1,34 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { NoResults, SearchRow, useSearchItems } from "@/components/providers/SearchProvider";
+import { NoResults, SearchRow, useSearchItems } from "./parts";
 import { useEnquiry } from "@/components/providers/SiteProvider";
 import { ArrowIcon, SearchIcon } from "@/components/ui/icons";
 import { FocusMark } from "@/components/ui/ornaments";
-import { searchItems, type SearchItem } from "@/lib/search";
+import { searchItems, suggestionsOf, type SearchItem } from "@/lib/search";
 
 /* The search results page (/search?q=…). On a warm band at the top: what was typed, editable, and
-   the filters on a gold-edged card. Below: categories and kinds of shoot as compact rows (there are
-   only ever a few dozen), and events as a grid of their photos, 24 at a time with "Show more", each
-   photo whole on a soft mat in a square frame, so the grid stays even whatever the client uploads.
-   With nothing typed and no filter chosen, nothing is shown (no photos fetched) but a few things to
-   try. Typing updates the address without reloading (so it can be shared or bookmarked); the
-   results follow once typing pauses (or at Enter, or the search button), so the photos for
-   half-typed words ("b", "ba", "bab" on the way to "baby") are never fetched.
-   Filters narrow down what the search found (with nothing typed, every event): categories, kinds of
-   shoot inside the chosen categories (listed under them; until a category is chosen it says to
-   choose one first), years and towns (those two are events' only, so choosing either shows events).
-   Several can be ticked in each: any of them will do, while every filter set must match. Kinds
-   narrow only their own category (Weddings + Couple with Reception ticked: the receptions, and all
-   of Couple). None ticked is all of them.
-   Each offers only what's in the results (with the other filters applied), so a choice never leads
-   to nothing; no counts beside them, for a clean list. A new search clears them. Sort orders the events (so until there
-   are some, it says to search or pick a filter first). */
+   the filters on a gold-edged card. Below: the categories and kinds of shoot it found, as rows
+   (there are only ever a few dozen). With nothing typed and no filter chosen, nothing is shown but
+   a few kinds of shoot to try. Typing updates the address without reloading (so it can be shared
+   or bookmarked); the results follow once typing pauses (or at Enter, or the search button).
+   Filters narrow down what the search found (with nothing typed, the whole gallery): categories,
+   and kinds of shoot inside the chosen categories (listed under them; until a category is chosen
+   it says to choose one first). Several can be ticked in each: any of them will do. Kinds narrow
+   only their own category (Weddings + Couple with Reception ticked: Reception, and all of Couple).
+   None ticked is all of them. Each offers only what's in the results, so a choice never leads to
+   nothing; no counts beside them, for a clean list. A new search clears them. */
 
-const PAGE = 24;
 // how long typing must pause before the results follow
 const SETTLE = 250;
-// offered to try on the empty page (any not in the gallery are left out)
-const TRY = ["Reception", "Nalangu", "Newborn", "First birthday", "Engagement", "Housewarming"];
+// how many kinds of shoot the empty page offers to try (picked from the gallery: suggestionsOf)
+const TRY = 6;
 
-type Filters = { categories: string[]; kinds: string[]; years: string[]; places: string[] };
+type Filters = { categories: string[]; kinds: string[] };
 type FilterKey = keyof Filters;
-const NO_FILTERS: Filters = { categories: [], kinds: [], years: [], places: [] };
-type Sort = "best" | "newest" | "oldest";
-
-const yearOf = (it: SearchItem) => (it.date ? String(Math.floor(it.date / 100)) : "");
+const NO_FILTERS: Filters = { categories: [], kinds: [] };
 
 /** Whether a result passes the filters (leaving one of them out, to list that one's choices);
     `kindOf` says which category each kind of shoot is in */
@@ -48,21 +37,19 @@ function passes(it: SearchItem, f: Filters, except: FilterKey | undefined, kindO
   const kindsHere = f.kinds.filter((k) => kindOf.get(k) === it.category);
   return (
     (except === "categories" || !f.categories.length || f.categories.includes(it.category)) &&
-    (except === "kinds" || !kindsHere.length || (it.type !== "category" && kindsHere.includes(it.kind ?? ""))) &&
-    (except === "years" || !f.years.length || (it.type === "event" && f.years.includes(yearOf(it)))) &&
-    (except === "places" || !f.places.length || (it.type === "event" && f.places.includes(it.place ?? "")))
+    (except === "kinds" || !kindsHere.length || (it.type !== "category" && kindsHere.includes(it.kind ?? "")))
   );
 }
 
-/** Each value and how many results have it (in the order of `place` when given: the gallery's) */
-function tally(list: SearchItem[], valueOf: (it: SearchItem) => string | undefined, place?: Map<string, number>) {
+/** Each value and how many results have it (in the order of `rank` when given: the gallery's) */
+function tally(list: SearchItem[], valueOf: (it: SearchItem) => string | undefined, rank?: Map<string, number>) {
   const counts = new Map<string, number>();
   for (const it of list) {
     const v = valueOf(it);
     if (v) counts.set(v, (counts.get(v) ?? 0) + 1);
   }
   const tallied = [...counts].map(([value, count]) => ({ value, count }));
-  return place ? tallied.sort((a, b) => (place.get(a.value) ?? 0) - (place.get(b.value) ?? 0)) : tallied;
+  return rank ? tallied.sort((a, b) => (rank.get(a.value) ?? 0) - (rank.get(b.value) ?? 0)) : tallied;
 }
 
 // little line icons for the filters, in the site's style
@@ -81,14 +68,6 @@ const ICONS = {
       <rect x="13" y="13" width="7" height="7" rx="1.5" />
     </>
   ),
-  year: <path d="M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z" />,
-  place: (
-    <>
-      <path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z" />
-      <circle cx="12" cy="9.5" r="2.5" />
-    </>
-  ),
-  sort: <path d="M8 4v16M4.5 16.5 8 20l3.5-3.5M16 20V4M12.5 7.5 16 4l3.5 3.5" />,
   refine: <path d="M4 7h10M18 7h2M4 17h4M12 17h8M14 4.5v5M8 14.5v5" />,
 };
 function Icon({ name, className = "size-4" }: { name: keyof typeof ICONS; className?: string }) {
@@ -115,16 +94,12 @@ export function SearchResults() {
   // what's in the box as it's typed, and what the results show: the box once typing pauses
   const [text, setText] = useState(q);
   const [typed, setTyped] = useState(q.trim());
-  const [shown, setShown] = useState(PAGE);
   const [filters, setFilters] = useState<Filters>(NO_FILTERS);
-  const [sort, setSort] = useState<Sort>("best");
 
-  // a new search starts clean: no filters, best match, the first 24
+  // a new search starts clean: no filters
   const startOver = (v: string) => {
     setTyped(v);
-    setShown(PAGE);
     setFilters(NO_FILTERS);
-    setSort("best");
   };
 
   // arriving from the search panel again with something else ("See all results")
@@ -164,41 +139,27 @@ export function SearchResults() {
       if (key === "categories") next.kinds = next.kinds.filter((k) => next.categories.includes(kindCategory.get(k) ?? ""));
       return next;
     });
-    setShown(PAGE);
   };
   // a filter emptied (a category's empties the kinds too)
-  const clear = (key: FilterKey) => {
+  const clear = (key: FilterKey) =>
     setFilters((f) => ({ ...f, [key]: [], ...(key === "categories" ? { kinds: [] } : {}) }));
-    setShown(PAGE);
-  };
-  const clearFilters = () => {
-    setFilters(NO_FILTERS);
-    setShown(PAGE);
-  };
+  const clearFilters = () => setFilters(NO_FILTERS);
 
   const filtered = Object.values(filters).some((v) => v.length > 0);
   // nothing typed and nothing chosen: nothing to show yet
   const asked = !!typed || filtered;
-  // with nothing typed there's no "best match": newest first, unless oldest is chosen
-  const order: Sort = !typed && sort === "best" ? "newest" : sort;
 
   const view = useMemo(() => {
-    // what the search found, or with nothing typed every event (the filters' choices come from it)
-    const base = !items ? [] : typed ? searchItems(items, typed) : items.filter((it) => it.type === "event");
+    // what the search found, or with nothing typed the whole gallery (the filters' choices come from it)
+    const base = !items ? [] : typed ? searchItems(items, typed) : items;
     const ok = (it: SearchItem, except?: FilterKey) => passes(it, filters, except, kindCategory);
     const found = asked ? base.filter((it) => ok(it)) : [];
-    const events = found.filter((it) => it.type === "event");
-    if (order !== "best") {
-      const when = (it: SearchItem) => it.date ?? (order === "newest" ? -Infinity : Infinity);
-      events.sort((a, b) => (order === "newest" ? when(b) - when(a) : when(a) - when(b)));
-    }
     // where each category and kind of shoot sits in the gallery, to list them in that order
     const gallery = (type: SearchItem["type"]) =>
       new Map((items ?? []).filter((it) => it.type === type).map((it, i) => [it.name, i]));
     return {
       // (categories first, then kinds of shoot, each best first)
       places: [...found.filter((it) => it.type === "category"), ...found.filter((it) => it.type === "shoot")],
-      events,
       total: base.length,
       categories: tally(
         base.filter((it) => ok(it, "categories")),
@@ -221,22 +182,14 @@ export function SearchResults() {
         }
         return groups;
       })(),
-      years: tally(
-        base.filter((it) => it.type === "event" && ok(it, "years")),
-        yearOf,
-      ).sort((a, b) => Number(b.value) - Number(a.value)),
-      towns: tally(
-        base.filter((it) => it.type === "event" && ok(it, "places")),
-        (it) => it.place,
-      ).sort((a, b) => b.count - a.count || a.value.localeCompare(b.value)),
-      suggestions: (items ?? []).filter((it) => it.type === "shoot" && TRY.includes(it.name)),
+      suggestions: suggestionsOf(items ?? [], TRY),
     };
-  }, [items, typed, filters, order, asked, kindCategory]);
-  const { places, events } = view;
-  const showing = places.length + events.length;
+  }, [items, typed, filters, asked, kindCategory]);
+  const { places } = view;
+  const showing = places.length;
 
   // the filters chosen, each removable on its own
-  const chosen = (["categories", "kinds", "years", "places"] as const).flatMap((key) =>
+  const chosen = (["categories", "kinds"] as const).flatMap((key) =>
     filters[key].map((value) => ({ key: `${key} ${value}`, value, remove: () => toggle(key, value) })),
   );
 
@@ -264,8 +217,8 @@ export function SearchResults() {
             {!items
               ? " "
               : asked
-                ? `${showing} ${showing === 1 ? "result" : "results"}${events.length ? ` · ${events.length} ${events.length === 1 ? "event" : "events"}` : ""}${filtered ? ` · filtered from ${view.total}` : ""}`
-                : "Every celebration, kind of shoot and family we’ve photographed."}
+                ? `${showing} ${showing === 1 ? "result" : "results"}${filtered ? ` · filtered from ${view.total}` : ""}`
+                : "Every celebration and kind of shoot we photograph."}
           </p>
 
           {/* What to search for */}
@@ -278,8 +231,8 @@ export function SearchResults() {
               onChange={(e) => setText(e.target.value)}
               // (Enter shows the results straight away)
               onKeyDown={(e) => e.key === "Enter" && settle(text)}
-              placeholder="A celebration, a kind of shoot or a name…"
-              aria-label="Search categories, kinds of shoot and names"
+              placeholder="A celebration or a kind of shoot…"
+              aria-label="Search categories and kinds of shoot"
               className="min-w-0 flex-1 bg-transparent py-3 text-[1.02rem] text-ink placeholder:text-ink/40 focus:outline-none sm:text-[1.08rem] [&::-webkit-search-cancel-button]:hidden"
             />
             {text && (
@@ -309,8 +262,8 @@ export function SearchResults() {
           {items && view.total > 0 && (
             <div
               role="group"
-              aria-label="Filter and sort the results"
-              className="sr-filters relative mt-8 rounded-[22px] bg-[#fffdf8] p-5 shadow-[0_30px_60px_-40px_rgb(60_30_15/0.5)] ring-1 ring-brand/45 sm:p-7"
+              aria-label="Filter the results"
+              className="sr-filters relative mt-8 max-w-[44rem] rounded-[22px] bg-[#fffdf8] p-5 shadow-[0_30px_60px_-40px_rgb(60_30_15/0.5)] ring-1 ring-brand/45 sm:p-7"
             >
               <div className="flex items-center justify-between gap-4">
                 <p className="flex items-center gap-2.5 font-display text-[1.15rem] sm:text-[1.25rem]">
@@ -328,18 +281,15 @@ export function SearchResults() {
                 )}
               </div>
 
-              <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5">
-                {/* (phones: across the top, the others two by two below) */}
-                <div className="col-span-2 lg:col-span-1">
-                  <MultiChoice
-                    label="Category"
-                    icon="category"
-                    chosen={filters.categories}
-                    options={view.categories}
-                    onToggle={(v) => toggle("categories", v)}
-                    onClear={() => clear("categories")}
-                  />
-                </div>
+              <div className="mt-5 grid grid-cols-2 gap-3 sm:gap-4">
+                <MultiChoice
+                  label="Category"
+                  icon="category"
+                  chosen={filters.categories}
+                  options={view.categories}
+                  onToggle={(v) => toggle("categories", v)}
+                  onClear={() => clear("categories")}
+                />
                 <MultiChoice
                   label="Sub-category"
                   icon="kind"
@@ -349,36 +299,6 @@ export function SearchResults() {
                   onClear={() => clear("kinds")}
                   hint={filters.categories.length ? undefined : "Choose a category first"}
                   offLabel="Category first"
-                />
-                <MultiChoice
-                  label="Year"
-                  icon="year"
-                  chosen={filters.years}
-                  options={view.years}
-                  onToggle={(v) => toggle("years", v)}
-                  onClear={() => clear("years")}
-                />
-                <MultiChoice
-                  label="Place"
-                  icon="place"
-                  chosen={filters.places}
-                  options={view.towns}
-                  onToggle={(v) => toggle("places", v)}
-                  onClear={() => clear("places")}
-                />
-                <Choice
-                  label="Sort"
-                  icon="sort"
-                  value={order}
-                  onChange={(v) => setSort(v as Sort)}
-                  options={[
-                    ...(typed ? [{ value: "best", label: "Best match" }] : []),
-                    { value: "newest", label: "Newest first" },
-                    { value: "oldest", label: "Oldest first" },
-                  ]}
-                  noAll
-                  quiet
-                  hint={events.length ? undefined : asked ? "No events to sort" : "Search or pick a filter first"}
                 />
               </div>
 
@@ -421,16 +341,21 @@ export function SearchResults() {
 
         {/* Nothing asked yet: a few things to try */}
         {items && !asked && (
-          <div className="mx-auto flex max-w-[40rem] flex-col items-center py-16 text-center lg:py-20">
-            <FocusMark className="h-7 w-10 text-accent" />
-            <p className="mt-5 font-display text-[clamp(1.4rem,2.6vw,1.9rem)] leading-[1.25]">
-              Start with a name or a celebration
+          <div className="flex flex-col items-center py-14 text-center sm:py-16 lg:py-20">
+            <span aria-hidden className="flex items-center gap-4 text-accent">
+              <span className="h-px w-12 bg-gradient-to-l from-brand to-transparent sm:w-20" />
+              <FocusMark className="h-7 w-10" />
+              <span className="h-px w-12 bg-gradient-to-r from-brand to-transparent sm:w-20" />
+            </span>
+            <p className="mt-5 font-display text-[clamp(1.6rem,3vw,2.3rem)] leading-[1.2]">
+              Start with a <span className="foil-deep">celebration</span>
             </p>
-            <p className="mt-2 text-[0.95rem] leading-[1.7] text-ink/60">
-              Type above, or choose a category, year or place to see the events.
+            <p className="mt-3 max-w-[48ch] text-[0.95rem] leading-[1.7] text-ink/60">
+              Type above, or choose a category to see its kinds of shoot.
             </p>
+
             {view.suggestions.length > 0 && (
-              <div className="mt-7 flex flex-wrap justify-center gap-2.5">
+              <div className="mt-7 flex max-w-[40rem] flex-wrap justify-center gap-2.5">
                 <span className="w-full font-mono text-[0.6rem] tracking-[0.2em] text-ink/45 uppercase">Try</span>
                 {view.suggestions.map((s) => (
                   <button
@@ -469,36 +394,6 @@ export function SearchResults() {
                 </li>
               ))}
             </ul>
-          </section>
-        )}
-
-        {/* Events */}
-        {events.length > 0 && (
-          <section aria-labelledby="search-events" className="mt-14 lg:mt-16">
-            <Heading id="search-events" count={events.length}>
-              Events
-            </Heading>
-            <ul className="mt-5 grid grid-cols-2 gap-x-3 gap-y-7 sm:gap-x-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-5 lg:gap-y-9">
-              {events.slice(0, shown).map((item, i) => (
-                <li key={item.href}>
-                  <EventCard item={item} eager={i < 4} />
-                </li>
-              ))}
-            </ul>
-            {shown < events.length && (
-              <div className="mt-10 flex flex-col items-center gap-3">
-                <p className="font-mono text-[0.62rem] tracking-[0.18em] text-ink/55 uppercase">
-                  Showing {shown} of {events.length}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setShown((s) => s + PAGE)}
-                  className="inline-flex items-center gap-3 rounded-full border border-accent-deep/40 px-7 py-3.5 font-heading text-[0.7rem] font-semibold tracking-[0.2em] text-accent-deep uppercase transition-colors duration-500 hover:border-accent-deep hover:bg-accent-deep hover:text-cream"
-                >
-                  Show more events
-                </button>
-              </div>
-            )}
           </section>
         )}
 
@@ -804,105 +699,5 @@ function MultiChoice({
         </>
       )}
     </Dropdown>
-  );
-}
-
-/** A filter where one is chosen: "All" (unless `noAll`), then each choice (or the choices in
-    groups, each under its heading); choosing one closes the list */
-function Choice({
-  label,
-  icon,
-  value,
-  onChange,
-  options,
-  groups,
-  hint,
-  noAll,
-  quiet,
-}: {
-  label: string;
-  icon: keyof typeof ICONS;
-  value: string;
-  onChange: (value: string) => void;
-  options?: Option[];
-  groups?: { label: string; options: Option[] }[];
-  hint?: string;
-  /** no "All" (sort: always one of its orders) */
-  noAll?: boolean;
-  /** never shown as a filter set (sort) */
-  quiet?: boolean;
-}) {
-  const all = [...(options ?? []), ...(groups ?? []).flatMap((g) => g.options)];
-  const any = all.length > 0;
-  const current = all.find((o) => o.value === value);
-  const row = (o: Option, close: () => void) => (
-    <Row
-      key={o.value}
-      chosen={o.value === value}
-      onClick={() => {
-        onChange(o.value);
-        close();
-      }}
-      label={o.label ?? o.value}
-    />
-  );
-  return (
-    <Dropdown
-      label={label}
-      icon={icon}
-      summary={current ? (current.label ?? current.value) : hint ? (label === "Sub-category" ? "Category first" : "—") : any ? "All" : "—"}
-      active={!quiet && !!value}
-      hint={hint ?? (any ? undefined : "Nothing to choose here")}
-    >
-      {(close) => (
-        <>
-          {!noAll && (
-            <Row
-              chosen={!value}
-              onClick={() => {
-                onChange("");
-                close();
-              }}
-              label="All"
-            />
-          )}
-          {options?.map((o) => row(o, close))}
-          {groups?.map((g) => (
-            <div key={g.label} role="group" aria-label={g.label}>
-              <GroupHeading>{g.label}</GroupHeading>
-              {g.options.map((o) => row(o, close))}
-            </div>
-          ))}
-        </>
-      )}
-    </Dropdown>
-  );
-}
-
-/** An event: its top photo whole on a soft mat, its names, and what kind of shoot and when */
-function EventCard({ item, eager }: { item: SearchItem; eager: boolean }) {
-  return (
-    <Link href={item.href} className="group block">
-      <span className="relative block aspect-square overflow-hidden rounded-[14px] bg-[#efe4d4] shadow-[0_22px_44px_-30px_rgb(60_30_15/0.55)] ring-1 ring-ink/10 transition-[translate,box-shadow] duration-500 group-hover:-translate-y-1 group-hover:shadow-[0_30px_54px_-30px_rgb(60_30_15/0.6)]">
-        {item.photo && (
-          <Image
-            src={item.photo}
-            alt=""
-            fill
-            sizes="(min-width: 1320px) 300px, (min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
-            loading={eager ? "eager" : "lazy"}
-            className="object-contain p-2.5 drop-shadow-[0_8px_14px_rgb(60_30_15/0.28)] transition-transform duration-1000 ease-luxe group-hover:scale-[1.03] sm:p-3"
-          />
-        )}
-      </span>
-      <span className="mt-3 block px-0.5 font-display text-[clamp(1.05rem,1.6vw,1.35rem)] leading-[1.2] transition-colors duration-500 group-hover:text-accent-deep">
-        {item.name}
-      </span>
-      <span className="mt-1 block px-0.5 text-[0.8rem] leading-[1.45] text-ink/55">
-        {item.where}
-        {item.when && <> &middot; {item.when}</>}
-        {item.place && <> &middot; {item.place}</>}
-      </span>
-    </Link>
   );
 }

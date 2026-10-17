@@ -7,8 +7,15 @@ import { useCallback, useMemo, useState } from "react";
 export const SAVED_EVENT = "ds:saved";
 
 /* Shared state for every section editor: holds a working copy, tracks whether it
-   differs from what was loaded, and saves the whole thing back in one request. */
-export function useEditor<T>(initial: T, endpoint: string, bodyKey: string) {
+   differs from what was loaded, and saves the whole thing back in one request.
+   `adopt` takes the saved version from the server's reply, for lists whose new
+   rows get their ids on saving (so the next save updates them, not adds them again). */
+export function useEditor<T>(
+  initial: T,
+  endpoint: string,
+  bodyKey: string,
+  adopt?: (reply: Record<string, unknown>) => T,
+) {
   const [original, setOriginal] = useState(initial);
   const [draft, setDraft] = useState(initial);
   const [saving, setSaving] = useState(false);
@@ -48,7 +55,9 @@ export function useEditor<T>(initial: T, endpoint: string, bodyKey: string) {
         return;
       }
 
-      setOriginal(draft);
+      const kept = adopt ? adopt(json) : draft;
+      setOriginal(kept);
+      if (adopt) setDraft(kept);
       setSaved(true);
       window.dispatchEvent(new Event(SAVED_EVENT));
     } catch {
@@ -56,7 +65,7 @@ export function useEditor<T>(initial: T, endpoint: string, bodyKey: string) {
     } finally {
       setSaving(false);
     }
-  }, [draft, endpoint, bodyKey]);
+  }, [draft, endpoint, bodyKey, adopt]);
 
   return { draft, update, dirty, saving, error, saved, save, reset };
 }

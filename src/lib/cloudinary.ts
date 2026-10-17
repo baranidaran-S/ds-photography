@@ -4,11 +4,16 @@ let configured = false;
 
 function client() {
   if (!configured) {
-    const { CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET } =
-      process.env;
+    /* The cloud name and API key are the same ones the browser's upload window reads
+       (NEXT_PUBLIC_*), so they're written once; only the secret is the server's alone. */
+    const CLOUDINARY_CLOUD_NAME =
+      process.env.CLOUDINARY_CLOUD_NAME || process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const CLOUDINARY_API_KEY =
+      process.env.CLOUDINARY_API_KEY || process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY;
+    const { CLOUDINARY_API_SECRET } = process.env;
     if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
       throw new Error(
-        "Cloudinary keys are missing. Fill CLOUDINARY_* in .env.local.",
+        "Cloudinary keys are missing. Fill NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME, NEXT_PUBLIC_CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET in .env.local.",
       );
     }
     cloudinary.config({
@@ -83,6 +88,7 @@ export const UPLOAD_FOLDERS = [
   "films",
   "logo",
   "contact",
+  "gallery",
   "misc",
 ] as const;
 

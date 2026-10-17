@@ -49,6 +49,12 @@
     outline: 2px solid var(--color-brand-light);
     outline-offset: 4px;
   }
+  /* On the site's pages (the ones with its menu bar; not the admin's), anything that can be clicked
+     shows the hand: Tailwind leaves buttons with the plain arrow. A switched-off one keeps the arrow. */
+  body:has(.site-header) :is(button, [role="button"], summary, select):not(:disabled, [aria-disabled="true"]),
+  body:has(.site-header) label:has(> input[type="checkbox"]) {
+    cursor: pointer;
+  }
 }
 
 /* Elements animated in by GSAP start hidden — only when JS is on and motion is allowed.
@@ -87,20 +93,6 @@ body:has(.light-page) .site-header [data-reveal] {
 @keyframes rise-settle {
   from {
     scale: 1.15;
-  }
-}
-
-/* The search panel (SearchProvider.tsx) drops in softly as it opens */
-@media (prefers-reduced-motion: no-preference) {
-  .sr-panel {
-    animation: sr-in 0.45s var(--ease-luxe) both;
-  }
-}
-@keyframes sr-in {
-  from {
-    opacity: 0;
-    translate: 0 -12px;
-    scale: 0.985;
   }
 }
 
@@ -947,10 +939,10 @@ body:has(.light-page) .site-header [data-reveal] {
       #f6ecdf;
   }
 
-  /* ── Gallery story page (CategoryStory.tsx): one couple's or family's story ── */
+  /* ── A kind of shoot's page (CategoryStory.tsx): one album of all its photos ── */
   /* The opening band: the photo whole in the middle, in its own shape (as wide as the band
      allows at its height, or as tall as it allows at its width), over soft cream silk
-     (images/gallery/event-bg.jpg, the same for every story) fading into the page below */
+     (images/gallery/event-bg.jpg, the same for every kind) fading into the page below */
   /* (phones: the band just fits the photo at full width, under the menu bar, up to about half
      the screen; a taller photo stands in the middle of that with the blur either side) */
   @media (max-width: 639px) {
@@ -971,14 +963,7 @@ body:has(.light-page) .site-header [data-reveal] {
   .sf-hero-veil {
     background: linear-gradient(180deg, transparent 62%, var(--color-cream) 100%);
   }
-  /* The facts card: a second gold hairline just inside its edge, and gold lines between the
-     facts that fade out at their ends (phones: the shoot sits under the other two) */
-  .sf-facts {
-    --sf-line: color-mix(in oklab, var(--color-brand) 70%, transparent);
-  }
-  /* (the experience note's card, and the search page's filters card, have the same second hairline) */
-  .sf-facts::after,
-  .sf-note::after,
+  /* The search page's filters card: a second gold hairline just inside its edge */
   .sr-filters::after {
     content: "";
     position: absolute;
@@ -987,78 +972,6 @@ body:has(.light-page) .site-header [data-reveal] {
     border-radius: 16px;
     pointer-events: none;
   }
-  .sf-note::after {
-    inset: 7px;
-    border-radius: 17px;
-  }
-  /* (its large gold quote marks: opening in the top-left corner, closing in the bottom-right; a
-     quote mark sits high in its line, so the closing one hangs below its box) */
-  .sf-note-q {
-    position: absolute;
-    font-family: var(--font-marcellus), Georgia, serif;
-    font-size: clamp(4.5rem, 9vw, 8rem);
-    line-height: 1;
-    color: color-mix(in oklab, var(--color-brand) 55%, transparent);
-    pointer-events: none;
-    user-select: none;
-  }
-  .sf-note-q-open {
-    left: clamp(1rem, 3.5vw, 2.6rem);
-    top: 0.08em;
-  }
-  .sf-note-q-close {
-    right: clamp(1rem, 3.5vw, 2.6rem);
-    bottom: -0.3em;
-  }
-  .sf-facts > div + div::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    top: 22%;
-    bottom: 22%;
-    width: 1px;
-    background: linear-gradient(transparent, var(--sf-line), transparent);
-  }
-  @media (max-width: 639px) {
-    .sf-facts > div:nth-child(3)::before {
-      inset: 0 14% auto;
-      width: auto;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--sf-line), transparent);
-    }
-  }
-  /* Their favourite photos, on a deep wine band (the page's only coloured one): every photo
-     whole and the same height in a row, each taking a share of the width in step with its shape
-     (CategoryStory puts the widest in the middle). Phones: the widest across the top, then the
-     others two by two, each pair the same height. */
-  .lv-band {
-    background:
-      radial-gradient(80% 120% at 50% 0%, color-mix(in oklab, var(--color-accent-deep) 62%, #1a0508), transparent 75%),
-      color-mix(in oklab, var(--color-accent-deep) 22%, #0b0a0a);
-  }
-  /* (the word "love" in its heading: rich gold, larger and softly glowing; the padding keeps the
-     script's swashes inside the gold, the negative margins keep the spacing as it was) */
-  .lv-love {
-    display: inline-block;
-    margin: -0.15em -0.2em;
-    padding: 0.15em 0.2em;
-    font-size: 1.25em;
-    background: linear-gradient(100deg, #d4a24c 0%, #f5d48c 40%, #dcaa52 70%, #f2cd80 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-    filter: drop-shadow(0 0 22px rgb(230 180 90 / 0.5));
-  }
-  .lv-row > li {
-    flex: var(--r) 1 0%;
-    aspect-ratio: var(--r);
-    min-width: 0;
-  }
-  .lv-photo {
-    box-shadow:
-      0 0 0 1px color-mix(in oklab, var(--color-brand) 60%, transparent),
-      0 30px 60px -30px rgb(0 0 0 / 0.8);
-  }
 
   /* Photos added by "Show more" float up into place, one after another */
   @media (prefers-reduced-motion: no-preference) {
@@ -1066,7 +979,7 @@ body:has(.light-page) .site-header [data-reveal] {
       animation: sf-pop 0.9s var(--ease-luxe) both;
     }
   }
-  /* The band behind their experience: a shade lighter than the page, warm at one corner */
+  /* A warm band (the search page's top): a shade lighter than the page, warm at one corner */
   .sf-band {
     background:
       radial-gradient(60% 80% at 0% 0%, color-mix(in oklab, var(--color-brand) 22%, transparent), transparent 70%),

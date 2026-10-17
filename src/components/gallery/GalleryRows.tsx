@@ -32,6 +32,7 @@ const GAP = 0.7;
 
 const shapeOf = (c: GalleryCategory) => (c.cover.src ? (c.shape ?? EMPTY) : EMPTY);
 const pad = (n: number) => String(n).padStart(2, "0");
+const kindsOf = (n: number) => `${n} kind${n === 1 ? "" : "s"} of shoot`;
 
 /** The categories, in order, cut into rows whose shapes add up as close to the target as they
     can (the best of every way of cutting them): a row too full comes out shorter, one too empty
@@ -92,10 +93,8 @@ export function GalleryRows({ categories }: { categories: GalleryCategory[] }) {
       // top photos show without waiting for this; the rest float up as they come into view
       const showing = q<HTMLElement>(".gr-item").filter((t) => t.offsetParent);
       const items = showing.filter((t) => !t.classList.contains("rise-in"));
-      gsap.set(
-        q<HTMLElement>(".gr-item").filter((t) => !t.offsetParent),
-        { autoAlpha: 1 },
-      );
+      const elsewhere = q<HTMLElement>(".gr-item").filter((t) => !t.offsetParent);
+      if (elsewhere.length) gsap.set(elsewhere, { autoAlpha: 1 });
 
       // those cards start hidden ([data-reveal]), then GSAP takes them over
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -119,16 +118,12 @@ export function GalleryRows({ categories }: { categories: GalleryCategory[] }) {
       if (reduce) return;
 
       /* ── Cards float up into place as they come into view, the photos settling inside them ── */
-      const reveal = (batch: Element[]) =>
-        gsap
-          .timeline()
-          .to(batch, { autoAlpha: 1, y: 0, duration: 1.2, ease: "expo.out", stagger: 0.09 })
-          .fromTo(
-            batch.flatMap((t) => [...t.querySelectorAll(".gr-photo")]),
-            { scale: 1.15 },
-            { scale: 1, duration: 1.8, ease: "expo.out", stagger: 0.09 },
-            0,
-          );
+      const reveal = (batch: Element[]) => {
+        const tl = gsap.timeline().to(batch, { autoAlpha: 1, y: 0, duration: 1.2, ease: "expo.out", stagger: 0.09 });
+        // (the "Don't see your celebration?" card has no photo to settle)
+        const inside = batch.flatMap((t) => [...t.querySelectorAll(".gr-photo")]);
+        if (inside.length) tl.fromTo(inside, { scale: 1.15 }, { scale: 1, duration: 1.8, ease: "expo.out", stagger: 0.09 }, 0);
+      };
       // cards already on screen or scrolled past (coming back to the page part-way down) appear
       // straight away: a scroll trigger behind them would never fire
       const line = window.innerHeight * 0.92;
@@ -177,7 +172,7 @@ export function GalleryRows({ categories }: { categories: GalleryCategory[] }) {
               )}
             </span>
           </span>
-          <span aria-hidden className="sw-shade pointer-events-none absolute inset-0" />
+          {c.cover.src && <span aria-hidden className="sw-shade pointer-events-none absolute inset-0" />}
           <span
             aria-hidden
             className="absolute top-2.5 right-2.5 z-10 grid size-8 place-items-center rounded-full border border-cream/40 text-[0.85rem] text-cream backdrop-blur-[2px] transition-[background-color,border-color,color,rotate] duration-500 ease-luxe group-hover:-rotate-45 group-hover:border-brand group-hover:bg-brand group-hover:text-night group-data-lit:-rotate-45 group-data-lit:border-brand group-data-lit:bg-brand group-data-lit:text-night sm:top-3.5 sm:right-3.5 sm:size-10"
@@ -193,7 +188,7 @@ export function GalleryRows({ categories }: { categories: GalleryCategory[] }) {
         </span>
         <span className="mt-2 flex items-center gap-2.5 px-0.5 font-heading text-[0.6rem] font-semibold tracking-[0.2em] text-accent-deep uppercase sm:mt-2.5 sm:text-[0.7rem]">
           <i aria-hidden className="h-px w-5 shrink-0 bg-[#c9a35f] sm:w-7" />
-          {c.cover.src ? `${c.subs.length} kinds of shoot` : "Photos coming soon"}
+          {c.subs.length ? kindsOf(c.subs.length) : "Coming soon"}
           <span className="ml-auto hidden font-mono font-normal tracking-[0.14em] text-[#9a7432] sm:inline">
             {pad(i + 1)}
           </span>
@@ -270,44 +265,67 @@ export function GalleryRows({ categories }: { categories: GalleryCategory[] }) {
           </p>
         </header>
 
-        {/* The rows: one arrangement for each size of screen, only the one that fits showing (its
-            first row of photos asked for as soon as the page arrives) */}
-        {layouts.map((l) => (
-          <PreloadPhotos
-            key={l.key}
-            media={SCREENS[l.key]}
-            photos={(l.rows[0]?.cats ?? [])
-              .filter((c) => c.cover.src)
-              .map((c) => ({ src: c.cover.src, sizes: sizesIn(l, 0, c) }))}
-          />
-        ))}
-        {layouts.map((l) => (
-          <div key={l.key} className={`${l.show} flex-col gap-9 sm:gap-12 lg:gap-14`}>
-            {l.rows.map((row, k) => {
-              const last = k === l.rows.length - 1;
-              const sum = rowSum(l, k);
-              return (
-                <ul
-                  key={k}
-                  className="gr-row mx-auto flex w-full gap-3 sm:gap-4 lg:gap-5"
-                  // (a row with too little in it keeps the usual height rather than growing)
-                  style={sum < l.target * GAP ? { maxWidth: `${(sum / l.target) * 100}%` } : undefined}
-                >
-                  {row.cats.map((c, j) =>
-                    card(c, categories.indexOf(c), sizesIn(l, k, c), k === 0 ? 0.3 + j * 0.09 : undefined),
-                  )}
-                  {last && l.askShape > 0 && (
-                    <li style={{ "--r": l.askShape } as React.CSSProperties}>
-                      {/* (its shape makes it exactly as tall as the photos beside it) */}
-                      <div style={{ aspectRatio: l.askShape }}>{ask(true)}</div>
-                    </li>
-                  )}
-                </ul>
-              );
-            })}
-            {l.askShape === 0 && ask(false)}
+        {categories.length === 0 ? (
+          /* Nothing in the gallery yet: it says so, and offers the enquiry form */
+          <div
+            className="rise-in flex flex-col items-center rounded-[22px] border border-dashed border-ink/15 px-6 py-16 text-center sm:py-20"
+            style={{ "--d": "0.3s" } as React.CSSProperties}
+          >
+            <FocusMark className="h-8 w-12 text-accent" />
+            <p className="mt-5 font-display text-[clamp(1.7rem,3.2vw,2.5rem)] leading-[1.15]">
+              Our gallery is being <span className="foil-deep">curated</span>
+            </p>
+            <p className="mt-3 max-w-[44ch] text-[0.98rem] leading-[1.7] text-ink/60">
+              Photos coming soon. Meanwhile, tell us what you&rsquo;re celebrating and we&rsquo;ll share our
+              recent work with you.
+            </p>
+            <button type="button" onClick={() => enquire({ source: "gallery" })} className="btn-brand btn-sm mt-7">
+              <ChatIcon className="size-4" />
+              Tell us
+            </button>
           </div>
-        ))}
+        ) : (
+          <>
+            {/* The rows: one arrangement for each size of screen, only the one that fits showing (its
+                first row of photos asked for as soon as the page arrives) */}
+            {layouts.map((l) => (
+              <PreloadPhotos
+                key={l.key}
+                media={SCREENS[l.key]}
+                photos={(l.rows[0]?.cats ?? [])
+                  .filter((c) => c.cover.src)
+                  .map((c) => ({ src: c.cover.src, sizes: sizesIn(l, 0, c) }))}
+              />
+            ))}
+            {layouts.map((l) => (
+              <div key={l.key} className={`${l.show} flex-col gap-9 sm:gap-12 lg:gap-14`}>
+                {l.rows.map((row, k) => {
+                  const last = k === l.rows.length - 1;
+                  const sum = rowSum(l, k);
+                  return (
+                    <ul
+                      key={k}
+                      className="gr-row mx-auto flex w-full gap-3 sm:gap-4 lg:gap-5"
+                      // (a row with too little in it keeps the usual height rather than growing)
+                      style={sum < l.target * GAP ? { maxWidth: `${(sum / l.target) * 100}%` } : undefined}
+                    >
+                      {row.cats.map((c, j) =>
+                        card(c, categories.indexOf(c), sizesIn(l, k, c), k === 0 ? 0.3 + j * 0.09 : undefined),
+                      )}
+                      {last && l.askShape > 0 && (
+                        <li style={{ "--r": l.askShape } as React.CSSProperties}>
+                          {/* (its shape makes it exactly as tall as the photos beside it) */}
+                          <div style={{ aspectRatio: l.askShape }}>{ask(true)}</div>
+                        </li>
+                      )}
+                    </ul>
+                  );
+                })}
+                {l.askShape === 0 && ask(false)}
+              </div>
+            ))}
+          </>
+        )}
       </div>
 
       {/* Every kind of shoot gliding past, edge to edge */}

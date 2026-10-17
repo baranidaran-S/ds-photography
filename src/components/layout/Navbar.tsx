@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useLenis } from "lenis/react";
 import { gsap, ScrollTrigger, useGSAP } from "@/lib/gsap";
@@ -9,7 +11,7 @@ import { useAnchorScroll } from "@/hooks/useAnchorScroll";
 import { Logo } from "@/components/ui/Logo";
 import { Mandala } from "@/components/ui/ornaments";
 import { ChatIcon, SearchIcon } from "@/components/ui/icons";
-import { prefetchSearch, useOpenSearch } from "@/components/providers/SearchProvider";
+import { prefetchSearch } from "@/components/search/parts";
 
 // Computers: half the links left of the centred logo, the rest on the right
 const half = Math.ceil(navLinks.length / 2);
@@ -57,8 +59,21 @@ export function Navbar() {
 
   const lenis = useLenis();
   const enquire = useEnquiry();
-  const openSearch = useOpenSearch();
   const { services, site } = useSite();
+
+  // Ctrl/⌘ + K goes to the search page from anywhere (already there: to its search box)
+  const router = useRouter();
+  const pathname = usePathname();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== "k") return;
+      e.preventDefault();
+      if (pathname === "/search") document.querySelector<HTMLInputElement>("main input[type=search]")?.focus();
+      else router.push("/search");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [pathname, router]);
 
   // Entrance: bar drops in with the hero intro
   useGSAP(
@@ -212,10 +227,9 @@ export function Navbar() {
                 ))}
               </ul>
 
-              {/* the gallery search (SearchProvider), on every page; tucked away while the phone menu is open */}
-              <button
-                type="button"
-                onClick={openSearch}
+              {/* the gallery search page (/search), on every page; tucked away while the phone menu is open */}
+              <Link
+                href="/search"
                 // (its list starts downloading as the pointer or a finger reaches the button)
                 onPointerEnter={prefetchSearch}
                 onPointerDown={prefetchSearch}
@@ -224,7 +238,7 @@ export function Navbar() {
                 className={`grid size-11 place-items-center transition-[color,opacity] duration-500 hover:text-brand-light lg:ml-6 xl:ml-9 ${open ? "pointer-events-none opacity-0" : ""}`}
               >
                 <SearchIcon className="size-[1.2rem]" />
-              </button>
+              </Link>
 
               <button
                 ref={toggleRef}
