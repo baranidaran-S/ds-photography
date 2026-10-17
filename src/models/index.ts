@@ -296,6 +296,97 @@ const galleryPhoto = new Schema(
 galleryPhoto.index({ sub: 1, _id: -1 });
 export const GalleryPhoto = register("GalleryPhoto", galleryPhoto);
 
+/* ──────────────────────────────── Blog ─────────────────────────────── */
+/* The blog (/blog): its posts, each in one of the gallery's categories (the blog has none of its
+   own). Every save is live: there are no drafts. A post's address (slug) is set when it's first
+   saved and never changes after, so links to it keep working (the old site's posts keep their old
+   names). */
+
+/** A story photo: where it is, its storage name (to delete or move it), its size (the story page
+    lays photos out by their shape, so nothing ever needs cropping) and its words for search
+    engines ("" → made from the post's title) */
+const blogPhotoSchema = new Schema(
+  {
+    src: { type: String, default: "" },
+    publicId: { type: String, default: "" },
+    width: { type: Number, default: 0 },
+    height: { type: Number, default: 0 },
+    alt: { type: String, default: "" },
+  },
+  { _id: false },
+);
+
+/** A cover: also the point kept in view when it's cropped */
+const blogCoverSchema = new Schema(
+  {
+    src: { type: String, default: "" },
+    publicId: { type: String, default: "" },
+    width: { type: Number, default: 0 },
+    height: { type: Number, default: 0 },
+    alt: { type: String, default: "" },
+    position: { type: String, default: "50% 50%" },
+  },
+  { _id: false },
+);
+
+export type BlogPhotoDoc = {
+  src: string;
+  publicId: string;
+  width: number;
+  height: number;
+  alt: string;
+};
+
+export type BlogPostData = {
+  _id: string;
+  slug: string;
+  title: string;
+  /** the gallery category it's in (its id) */
+  category: string;
+  place: string;
+  date: string;
+  cover: BlogPhotoDoc & { position: string };
+  storyCover: BlogPhotoDoc & { position: string };
+  tone: string;
+  excerpt: string;
+  description: string;
+  photos: BlogPhotoDoc[];
+  seoTitle: string;
+  seoDescription: string;
+};
+
+const blogPost = new Schema(
+  {
+    slug: { type: String, required: true, unique: true },
+    title: { type: String, required: true },
+    /** one of the gallery's categories (renaming it there renames it here; deleting it leaves
+        the post with none) */
+    category: { type: Schema.Types.ObjectId, ref: "GalleryCategory", index: true },
+    /** where the shoot was */
+    place: { type: String, default: "" },
+    /** published, as yyyy-mm-dd: the blog lists the newest first */
+    date: { type: String, required: true },
+    /** its card on the blog page, and the top of its own page unless that has its own */
+    cover: { type: blogCoverSchema, default: () => ({}) },
+    /** the top of its own page, when a different photo is wanted there (optional) */
+    storyCover: { type: blogCoverSchema, default: () => ({}) },
+    /** its card's colour ("" → a warm dark brown) */
+    tone: { type: String, default: "" },
+    /** its card's two lines ("" → the start of the description) */
+    excerpt: { type: String, default: "" },
+    /** the story's words, all in one, as typed: an empty line starts a new paragraph */
+    description: { type: String, default: "" },
+    /** the shoot's photos, in the admin's order (a few dozen at most, so kept with the post) */
+    photos: { type: [blogPhotoSchema], default: [] },
+    /** what search engines show ("" → the title, and the card's two lines) */
+    seoTitle: { type: String, default: "" },
+    seoDescription: { type: String, default: "" },
+  },
+  { timestamps: true },
+);
+blogPost.index({ date: -1, _id: -1 });
+export const BlogPost = register("BlogPost", blogPost);
+
 /* ─────────────────────────────── Reviews ───────────────────────────── */
 
 export type ChatMessageData = {

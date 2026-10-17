@@ -89,6 +89,7 @@ export const UPLOAD_FOLDERS = [
   "logo",
   "contact",
   "gallery",
+  "blog",
   "misc",
 ] as const;
 

@@ -81,6 +81,8 @@ export async function POST(request: Request) {
   // its page on the site, and the search (which suggests the fullest kinds), are made again
   if (category) revalidatePath(`/gallery/${category.slug}/${sub.slug}`);
   revalidatePath("/search.json");
+  // (an album's first photos put it in the sitemap; its last ones deleted take it out)
+  revalidatePath("/sitemap.xml");
 
   return NextResponse.json({
     ok: true,

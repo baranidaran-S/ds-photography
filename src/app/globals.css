@@ -998,6 +998,57 @@ body:has(.light-page) .site-header [data-reveal] {
     touch-action: none;
   }
 
+  /* ── The blog page (BlogList.tsx) ── */
+  /* A story's card (and the big one at the top): a frame in a deep shade of its photo's colour
+     (--tone, set per story), the photo on a lighter panel with the date under it, then the title,
+     its tags and a gold button. Lifts a little under the mouse, and its button fills red. */
+  .bj-card {
+    background: var(--tone);
+    box-shadow:
+      0 2px 4px rgb(30 15 5 / 0.12),
+      0 26px 44px -30px rgb(30 15 5 / 0.7);
+    transition:
+      translate 0.6s var(--ease-luxe),
+      box-shadow 0.6s var(--ease-luxe);
+  }
+  .bj-card-panel {
+    background: color-mix(in oklab, var(--tone), white 20%);
+    background: oklch(from var(--tone) calc(l + 0.15) calc(c * 1.25) h);
+  }
+  .bj-chip {
+    background: color-mix(in oklab, var(--tone), white 10%);
+    background: oklch(from var(--tone) calc(l + 0.07) c h);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    /* (only cards that are links: a story's own card at the top of its page stays still) */
+    a.bj-card:hover {
+      translate: 0 -6px;
+      box-shadow:
+        0 2px 4px rgb(30 15 5 / 0.12),
+        0 36px 54px -28px rgb(30 15 5 / 0.75);
+    }
+    a.bj-card:hover .btn-brand {
+      color: var(--btn-hover-fg);
+    }
+    a.bj-card:hover .btn-brand::after {
+      transform: scaleY(1);
+    }
+  }
+  /* Pieces that show as they come into view (BlogList.tsx sets data-in on the .bj-reveal around
+     them): they rise in one after another (each waits --t). Nothing hidden without JavaScript or
+     with reduced motion. (No transition utilities on these: they'd replace these transitions.) */
+  @media (prefers-reduced-motion: no-preference) {
+    .bj-up {
+      transition:
+        opacity 1s var(--ease-luxe) var(--t, 0s),
+        translate 1.2s var(--ease-luxe) var(--t, 0s);
+    }
+    html.js .bj-reveal:not([data-in]) .bj-up {
+      opacity: 0;
+      translate: 0 30px;
+    }
+  }
+
 }
 
 @layer components {

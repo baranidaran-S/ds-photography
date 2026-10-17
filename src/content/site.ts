@@ -15,13 +15,14 @@ export const site = {
 };
 
 // Menu links in page order. On computers the first half sits left of the logo, the rest on the right.
-// "#…" links are sections of the home page; Gallery is a page of its own.
+// "#…" links are sections of the home page; Gallery and Blog are pages of their own.
 export const navLinks = [
   { label: "Home", href: "#home" },
   { label: "Gallery", href: "/gallery" },
   { label: "Portfolio", href: "#portfolio" },
   { label: "About", href: "#about" },
   { label: "Reviews", href: "#reviews" },
+  { label: "Blog", href: "/blog" },
   { label: "Contact", href: "#contact" },
 ];
 

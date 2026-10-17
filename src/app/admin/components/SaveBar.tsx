@@ -7,10 +7,12 @@ type Props = {
   saved?: boolean;
   onSave: () => void;
   onReset: () => void;
+  /** the save button's words, when "Save changes" isn't right (a new blog post: "Publish") */
+  saveLabel?: string;
 };
 
 /** Sticky footer every section editor shares: save state, errors, and a way back. */
-export function SaveBar({ dirty, saving, error, saved, onSave, onReset }: Props) {
+export function SaveBar({ dirty, saving, error, saved, onSave, onReset, saveLabel = "Save changes" }: Props) {
   return (
     <div className="sticky bottom-0 z-10 -mx-4 mt-8 border-t border-slate-200 bg-white/90 px-4 py-3.5 backdrop-blur sm:-mx-6 sm:px-6 lg:-mx-9 lg:px-9">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -50,7 +52,7 @@ export function SaveBar({ dirty, saving, error, saved, onSave, onReset }: Props)
             disabled={!dirty || saving}
             className="rounded-lg bg-accent-deep px-5 py-2.5 font-heading text-[0.74rem] font-bold tracking-[0.12em] text-cream uppercase transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {saving ? "Saving…" : "Save changes"}
+            {saving ? "Saving…" : saveLabel}
           </button>
         </div>
       </div>

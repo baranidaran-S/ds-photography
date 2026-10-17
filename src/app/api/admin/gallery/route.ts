@@ -172,6 +172,7 @@ export async function PUT(request: Request) {
   revalidatePath("/(site)/gallery/[category]", "page");
   revalidatePath("/(site)/gallery/[category]/[sub]", "page");
   revalidatePath("/search.json");
+  revalidatePath("/sitemap.xml");
   // the editor takes back what was saved, new ones with their ids
   return NextResponse.json({ ok: true, categories: await galleryTree() });
 }
